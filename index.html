@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BinarySignal — Browser Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #141414;
+      --border:    #2a2a2a;
+      --green:     #39ff14;
+      --cyan:      #00e5ff;
+      --yellow:    #ffe600;
+      --pink:      #ff2d78;
+      --white:     #f0f0f0;
+      --dim:       #888;
+      --pixel:     4px;           /* base pixel unit */
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      line-height: 1.9;
+      overflow-x: hidden;
+      image-rendering: pixelated;
+    }
+
+    /* ─── Scanlines overlay ────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,.18) 3px,
+        rgba(0,0,0,.18) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── CRT flicker ──────────────────────────────────────────── */
+    @keyframes flicker {
+      0%, 97%, 100% { opacity: 1; }
+      98%           { opacity: .92; }
+      99%           { opacity: .96; }
+    }
+    body { animation: flicker 6s infinite; }
+
+    /* ─── Scrollbar ────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--green); image-rendering: pixelated; }
+
+    /* ─── Pixel border helper ──────────────────────────────────── */
+    .pixel-border {
+      border: var(--pixel) solid var(--green);
+      box-shadow:
+        calc(var(--pixel) * -1) 0 0 0 var(--green),
+        calc(var(--pixel))      0 0 0 var(--green),
+        0 calc(var(--pixel) * -1) 0 0 var(--green),
+        0 calc(var(--pixel))      0 0 var(--green);
+      image-rendering: pixelated;
+    }
+
+    /* ─── Stars background ─────────────────────────────────────── */
+    .stars {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .stars span {
+      position: absolute;
+      display: block;
+      width: 4px;
+      height: 4px;
+      background: var(--white);
+      animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .1; }
+    }
+
+    /* ─── Layout wrapper ───────────────────────────────────────── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       NAV
+    ══════════════════════════════════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,13,13,.95);
+      border-bottom: 4px solid var(--green);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .nav-logo {
+      font-size: 11px;
+      color: var(--green);
+      text-decoration: none;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px var(--green);
+    }
+    .nav-logo span { color: var(--cyan); }
+    .nav-badge {
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--yellow);
+      border: 2px solid var(--yellow);
+      padding: 2px 10px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 6px var(--yellow);
+      box-shadow: 0 0 8px var(--yellow);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════════════════════════ */
+    .hero {
+      min-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 60px;
+      gap: 32px;
+    }
+
+    /* ── Pixel sprite ── */
+    .sprite-wrap {
+      display: flex;
+      gap: 24px;
+      align-items: flex-end;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Character: little pixel hero */
+    .pixel-char {
+      width: 64px;
+      height: 80px;
+      image-rendering: pixelated;
+      animation: charBob 1.2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes charBob {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    /* Controller icon (CSS-only) */
+    .controller {
+      width: 80px;
+      height: 48px;
+      background: var(--dim);
+      border-radius: 8px 8px 20px 20px;
+      position: relative;
+      animation: ctrlFloat 2s ease-in-out infinite .4s;
+      flex-shrink: 0;
+    }
+    @keyframes ctrlFloat {
+      0%, 100% { transform: translateY(0) rotate(-4deg); }
+      50%       { transform: translateY(-10px) rotate(4deg); }
+    }
+    .controller::before {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px; height: 12px;
+      background: var(--surface);
+      border-radius: 50%;
+    }
+    .controller .btn-group {
+      position: absolute;
+      right: 14px; top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 10px);
+      gap: 4px;
+    }
+    .controller .btn-group span {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .controller .btn-group span:nth-child(1) { background: var(--pink); }
+    .controller .btn-group span:nth-child(2) { background: var(--green); }
+    .controller .btn-group span:nth-child(3) { background: var(--yellow); }
+    .controller .btn-group span:nth-child(4) { background: var(--cyan); }
+    .controller .dpad {
+      position: absolute;
+      left: 14px; top: 8px;
+      width: 28px; height: 28px;
+    }
+    .dpad-h, .dpad-v {
+      position: absolute;
+      background: var(--surface);
+    }
+    .dpad-h { width: 100%; height: 33%; top: 33%; left: 0; }
+    .dpad-v { width: 33%; height: 100%; top: 0; left: 33%; }
+
+    /* Pixel coin */
+    .coin {
+      width: 24px; height: 24px;
+      background: var(--yellow);
+      border-radius: 50%;
+      border: 4px solid #a07800;
+      box-shadow: 0 0 10px var(--yellow);
+      animation: coinSpin 1s steps(4) infinite;
+      align-self: center;
+    }
+    @keyframes coinSpin {
+      0%   { transform: scaleX(1); background: var(--yellow); }
+      25%  { transform: scaleX(.5); }
+      50%  { transform: scaleX(0); background: #c8a000; }
+      75%  { transform: scaleX(.5); }
+      100% { transform: scaleX(1); background: var(--yellow); }
+    }
+
+    /* ── Headline ── */
+    .hero-headline {
+      font-size: clamp(18px, 4vw, 30px);
+      color: var(--green);
+      text-shadow: 0 0 12px var(--green), 0 0 30px var(--green);
+      letter-spacing: 2px;
+      line-height: 1.5;
+    }
+
+    .hero-sub {
+      font-family: 'VT323', monospace;
+      font-size: clamp(22px, 4vw, 34px);
+      color: var(--cyan);
+      letter-spacing: 4px;
+      text-shadow: 0 0 8px var(--cyan);
+    }
+
+    /* Typing cursor */
+    .cursor {
+      display: inline-block;
+      width: 12px;
+      height: 1.1em;
+      background: var(--green);
+      vertical-align: text-bottom;
+      animation: blink .8s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Intro text box ── */
+    .intro-box {
+      max-width: 680px;
+      background: var(--surface);
+      border: 4px solid var(--border);
+      border-top-color: var(--cyan);
+      padding: 28px 32px;
+      text-align: left;
+      position: relative;
+    }
+    .intro-box::before {
+      content: '// WELCOME.TXT';
+      position: absolute;
+      top: -14px; left: 16px;
+      background: var(--surface);
+      color: var(--cyan);
+      font-size: 9px;
+      padding: 0 8px;
+    }
+    .intro-box p {
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      color: var(--white);
+      line-height: 1.7;
+    }
+    .intro-box p + p { margin-top: 16px; }
+    .intro-box .hi { color: var(--yellow); }
+    .intro-box .em { color: var(--green); }
+    .intro-box .pi { color: var(--pink); }
+
+    /* ── CTA button ── */
+    .cta-wrap { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+    .btn {
+      display: inline-block;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      padding: 14px 28px;
+      cursor: pointer;
+      text-decoration: none;
+      position: relative;
+      transition: transform .1s;
+      user-select: none;
+    }
+    .btn:active { transform: translate(4px,4px); }
+
+    .btn-primary {
+      color: var(--bg);
+      background: var(--green);
+      border: none;
+      box-shadow: 4px 4px 0 #1a7a0a, 8px 8px 0 #0c3d05;
+      text-shadow: none;
+    }
+    .btn-primary:hover {
+      background: #5dff3a;
+      box-shadow: 4px 4px 0 #228a14, 8px 8px 0 #1a5c08;
+    }
+    .btn-secondary {
+      color: var(--cyan);
+      background: transparent;
+      border: 4px solid var(--cyan);
+      box-shadow: 4px 4px 0 #006080;
+      text-shadow: 0 0 6px var(--cyan);
+    }
+    .btn-secondary:hover { background: rgba(0,229,255,.08); }
+
+    /* ══════════════════════════════════════════════════════════════
+       DIVIDER
+    ══════════════════════════════════════════════════════════════ */
+    .pixel-divider {
+      height: 8px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--green) 0, var(--green) 8px,
+        transparent 8px, transparent 16px
+      );
+      opacity: .4;
+      margin: 0;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FEATURES STRIP
+    ══════════════════════════════════════════════════════════════ */
+    .features {
+      padding: 64px 24px;
+      background: var(--surface);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 28px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--bg);
+      border: 4px solid var(--border);
+      padding: 24px 20px;
+      position: relative;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .feature-card:hover {
+      border-color: var(--green);
+      box-shadow: 0 0 16px rgba(57,255,20,.2);
+    }
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+      display: block;
+      image-rendering: pixelated;
+    }
+    .feature-title {
+      font-size: 9px;
+      color: var(--yellow);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .feature-desc {
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; right: -4px;
+      width: 12px; height: 12px;
+      background: var(--green);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .feature-card:hover::after { opacity: 1; }
+
+    /* ══════════════════════════════════════════════════════════════
+       MARQUEE / TICKER
+    ══════════════════════════════════════════════════════════════ */
+    .ticker-wrap {
+      overflow: hidden;
+      border-top: 4px solid var(--yellow);
+      border-bottom: 4px solid var(--yellow);
+      background: rgba(255,230,0,.06);
+      padding: 10px 0;
+    }
+    .ticker-inner {
+      display: flex;
+      gap: 64px;
+      white-space: nowrap;
+      animation: ticker 18s linear infinite;
+    }
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .ticker-item {
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      color: var(--yellow);
+      letter-spacing: 3px;
+      flex-shrink: 0;
+    }
+    .ticker-sep { color: var(--pink); margin: 0 8px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       PIXEL ART SCENE
+    ══════════════════════════════════════════════════════════════ */
+    .scene-section {
+      padding: 72px 24px;
+      text-align: center;
+    }
+    .scene-title {
+      font-size: clamp(12px, 2vw, 16px);
+      color: var(--pink);
+      text-shadow: 0 0 10px var(--pink);
+      margin-bottom: 48px;
+      letter-spacing: 3px;
+    }
+    .scene-canvas {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #080820;
+      border: 4px solid var(--cyan);
+      padding: 32px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ground */
+    .ground {
+      height: 16px;
+      background: repeating-linear-gradient(
+        90deg,
+        #2a5c2a 0, #2a5c2a 16px,
+        #1e421e 16px, #1e421e 32px
+      );
+      border-top: 4px solid #5aff5a;
+      margin-top: 40px;
+    }
+
+    /* Mountains */
+    .mountain-wrap {
+      position: relative;
+      height: 80px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0;
+    }
+    .mt {
+      width: 0; height: 0;
+      border-left: solid transparent;
+      border-right: solid transparent;
+      border-bottom: solid;
+      position: relative;
+    }
+    .mt-a { border-left-width: 50px; border-right-width: 50px; border-bottom-width: 70px; border-bottom-color: #2a3a5c; }
+    .mt-b { border-left-width: 70px; border-right-width: 70px; border-bottom-width: 90px; border-bottom-color: #1e2e4a; margin-bottom: -10px; }
+    .mt-c { border-left-width: 40px; border-right-width: 40px; border-bottom-width: 55px; border-bottom-color: #364470; }
+
+    /* Stars in scene */
+    .scene-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .s-star {
+      position: absolute;
+      width: 4px; height: 4px;
+      background: #fff;
+      animation: twinkle var(--d,2s) ease-in-out infinite var(--delay,0s);
+    }
+
+    /* Moon */
+    .moon {
+      width: 36px; height: 36px;
+      background: var(--yellow);
+      border-radius: 50%;
+      position: absolute;
+      top: 20px; right: 60px;
+      box-shadow: 0 0 20px var(--yellow), 0 0 40px rgba(255,230,0,.3);
+      animation: moonGlow 3s ease-in-out infinite;
+    }
+    @keyframes moonGlow {
+      0%, 100% { box-shadow: 0 0 20px var(--yellow), 0 0 40px rgba(255,230,0,.3); }
+      50%       { box-shadow: 0 0 30px var(--yellow), 0 0 60px rgba(255,230,0,.5); }
+    }
+
+    /* Scene characters */
+    .scene-chars {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 56px;
+      margin-bottom: -4px;
+    }
+    .s-char {
+      width: 16px;
+      height: 32px;
+      position: relative;
+      animation: walk 0.8s steps(2) infinite;
+    }
+    @keyframes walk {
+      0%   { transform: scaleX(1); }
+      50%  { transform: scaleX(-1); }
+      100% { transform: scaleX(1); }
+    }
+    /* Tiny knight (CSS only) */
+    .knight .head { width: 12px; height: 12px; background: #aaa; margin: 0 auto 0; border: 2px solid #555; }
+    .knight .body { width: 14px; height: 16px; background: #888; margin: 0 auto; border: 2px solid #555; }
+    .knight .legs { display: flex; justify-content: center; gap: 2px; }
+    .knight .leg  { width: 5px; height: 8px; background: #666; border: 2px solid #444; }
+    /* Tiny wizard */
+    .wizard .hat  { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 14px solid #6a0dad; margin: 0 auto; }
+    .wizard .head { width: 12px; height: 10px; background: #f5cba7; margin: 0 auto; }
+    .wizard .robe { width: 16px; height: 16px; background: #6a0dad; margin: 0 auto; clip-path: polygon(50% 0%, 100% 100%, 0% 100%); }
+
+    .scene-caption {
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--dim);
+      margin-top: 20px;
+      letter-spacing: 2px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       SIGNAL SECTION
+    ══════════════════════════════════════════════════════════════ */
+    .signal-section {
+      padding: 64px 24px;
+      background: var(--surface);
+      text-align: center;
+    }
+    .signal-title {
+      font-size: clamp(12px, 2vw, 16px);
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green);
+      margin-bottom: 48px;
+      letter-spacing: 3px;
+    }
+
+    /* Binary rain */
+    .binary-grid {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    .bin-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 18px;
+    }
+    .bin-digit {
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: var(--green);
+      text-align: center;
+      opacity: 0;
+      animation: rain var(--rd, 2s) ease-in infinite var(--rdelay, 0s);
+    }
+    @keyframes rain {
+      0%  { opacity: 0; transform: translateY(-20px); }
+      20% { opacity: 1; }
+      80% { opacity: .6; }
+      100%{ opacity: 0; transform: translateY(10px); }
+    }
+
+    .signal-text {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .signal-text p {
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      color: var(--dim);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .signal-text .hi { color: var(--green); }
+
+    /* ══════════════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════════════ */
+    footer {
+      border-top: 4px solid var(--border);
+      padding: 36px 24px;
+      text-align: center;
+    }
+    .footer-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .footer-logo {
+      font-size: 10px;
+      color: var(--green);
+      text-shadow: 0 0 8px var(--green);
+    }
+    .footer-logo span { color: var(--cyan); }
+    .footer-copy {
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: var(--dim);
+      letter-spacing: 2px;
+    }
+    .footer-copy a {
+      color: var(--green);
+      text-decoration: none;
+    }
+    .footer-copy a:hover { text-decoration: underline; }
+    .footer-hearts { color: var(--pink); }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .intro-box { padding: 20px 16px; }
+      .intro-box p { font-size: 18px; }
+      .feature-desc { font-size: 16px; }
+      .sprite-wrap { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Stars background ──────────────────────────────────── -->
+  <div class="stars" id="starsContainer"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       NAV
+  ══════════════════════════════════════════════════════════════ -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="#">Binary<span>Signal</span></a>
+      <div class="nav-badge">PRIVATE ACCESS</div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+
+    <!-- pixel sprites -->
+    <div class="sprite-wrap">
+      <!-- pixel character SVG -->
+      <svg class="pixel-char" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg">
+        <!-- head -->
+        <rect x="4" y="0" width="8" height="8" fill="#f5cba7"/>
+        <!-- eyes -->
+        <rect x="5" y="2" width="2" height="2" fill="#333"/>
+        <rect x="9" y="2" width="2" height="2" fill="#333"/>
+        <!-- mouth -->
+        <rect x="6" y="5" width="4" height="1" fill="#333"/>
+        <!-- body -->
+        <rect x="3" y="8" width="10" height="7" fill="#39ff14"/>
+        <!-- arms -->
+        <rect x="0" y="9" width="3" height="4" fill="#39ff14"/>
+        <rect x="13" y="9" width="3" height="4" fill="#39ff14"/>
+        <!-- hands -->
+        <rect x="0" y="13" width="3" height="2" fill="#f5cba7"/>
+        <rect x="13" y="13" width="3" height="2" fill="#f5cba7"/>
+        <!-- legs -->
+        <rect x="4" y="15" width="3" height="5" fill="#333"/>
+        <rect x="9" y="15" width="3" height="5" fill="#333"/>
+        <!-- shoes -->
+        <rect x="3" y="18" width="4" height="2" fill="#555"/>
+        <rect x="9" y="18" width="4" height="2" fill="#555"/>
+      </svg>
+
+      <!-- CSS controller -->
+      <div class="controller" style="width:80px;height:50px;">
+        <div class="dpad">
+          <div class="dpad-h"></div>
+          <div class="dpad-v"></div>
+        </div>
+        <div class="btn-group">
+          <span></span><span></span>
+          <span></span><span></span>
+        </div>
+      </div>
+
+      <div class="coin"></div>
+
+      <!-- pixel star SVG -->
+      <svg width="40" height="40" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"
+           style="animation: charBob 1.6s ease-in-out infinite .3s; image-rendering:pixelated;">
+        <rect x="4" y="0" width="2" height="2" fill="#ffe600"/>
+        <rect x="4" y="2" width="2" height="2" fill="#ffe600"/>
+        <rect x="0" y="4" width="10" height="2" fill="#ffe600"/>
+        <rect x="2" y="2" width="6" height="6" fill="#ffe600"/>
+        <rect x="4" y="8" width="2" height="2" fill="#ffe600"/>
+      </svg>
+    </div>
+
+    <!-- headline -->
+    <h1 class="hero-headline">BINARY<span style="color:var(--cyan)">SIGNAL</span><br>BROWSER GAMES</h1>
+    <p class="hero-sub">PLAYER ONE — PRESS START<span class="cursor"></span></p>
+
+    <!-- intro box -->
+    <div class="intro-box">
+      <p><span class="hi">Welcome, adventurer.</span><br>
+      You've tuned into the right frequency.<br>
+      <span class="em">BinarySignal</span> is a private collection of handcrafted browser games — built for those who know where to look.</p>
+      <p>No installs. No accounts. Just <span class="pi">pure, pixelated gameplay</span> straight from your browser. Grab a controller (or a keyboard), find your game, and get lost in the signal.</p>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a href="#games" class="btn btn-primary">▶ ENTER THE ARCADE</a>
+      <a href="#about" class="btn btn-secondary">◈ ABOUT THE SIGNAL</a>
+    </div>
+
+  </section>
+
+  <div class="pixel-divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TICKER
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="ticker-wrap">
+    <div class="ticker-inner" id="ticker"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FEATURES
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="features" id="games">
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <span class="feature-icon">🕹️</span>
+        <div class="feature-title">INSTANT PLAY</div>
+        <p class="feature-desc">Zero downloads. Zero setup. Open a game and you're already playing. Works on any modern browser.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🎮</span>
+        <div class="feature-title">ALL GENRES</div>
+        <p class="feature-desc">From quick arcade blasters to deep puzzle adventures — the collection spans every corner of play.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-title">PRIVATE ACCESS</div>
+        <p class="feature-desc">This is our corner of the internet. Curated, controlled, and shared only with the right people.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">ALWAYS ON</div>
+        <p class="feature-desc">The signal never sleeps. Games are hosted and ready whenever you feel the urge to play.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="pixel-divider" style="--color:var(--pink); background: repeating-linear-gradient(90deg,var(--pink) 0,var(--pink) 8px,transparent 8px,transparent 16px); opacity:.35;"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PIXEL SCENE
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="scene-section">
+    <h2 class="scene-title">◈ THE WORLD AWAITS ◈</h2>
+    <div class="scene-canvas">
+      <div class="scene-stars" id="sceneStars"></div>
+      <div class="moon"></div>
+      <div class="mountain-wrap">
+        <div class="mt mt-c"></div>
+        <div class="mt mt-b"></div>
+        <div class="mt mt-a"></div>
+        <div class="mt mt-b"></div>
+        <div class="mt mt-c"></div>
+      </div>
+      <div class="scene-chars">
+        <div class="s-char knight">
+          <div class="head"></div>
+          <div class="body"></div>
+          <div class="legs"><div class="leg"></div><div class="leg"></div></div>
+        </div>
+        <div class="s-char wizard">
+          <div class="hat"></div>
+          <div class="head"></div>
+          <div class="robe"></div>
+        </div>
+        <div class="s-char knight" style="animation-delay:.4s;">
+          <div class="head"></div>
+          <div class="body"></div>
+          <div class="legs"><div class="leg"></div><div class="leg"></div></div>
+        </div>
+      </div>
+      <div class="ground"></div>
+    </div>
+    <p class="scene-caption">▲ YOUR NEXT ADVENTURE IS ONE CLICK AWAY ▲</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       BINARY / SIGNAL SECTION
+  ══════════════════════════════════════════════════════════════ -->
+  <section class="signal-section" id="about">
+    <h2 class="signal-title">◈ THE SIGNAL ◈</h2>
+    <div class="binary-grid" id="binaryGrid"></div>
+    <div class="signal-text">
+      <p><span class="hi">Every game begins with a signal.</span></p>
+      <p>A binary pulse. A spark of code. At BinarySignal, we believe the best games are made one bit at a time — crafted with care, tested with love, and shared with a select few.</p>
+      <p>This isn't an app store. It's a <span class="hi">transmission</span>. Tune in.</p>
+    </div>
+  </section>
+
+  <div class="pixel-divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════════════════ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">Binary<span>Signal</span></div>
+      <p class="footer-copy">
+        &copy; 2026 BinarySignal &nbsp;·&nbsp;
+        Made with <span class="footer-hearts">♥</span> and too many late nights
+      </p>
+      <p class="footer-copy" style="font-size:13px;">
+        01000010 01001001 01001110 01000001 01010010 01011001
+      </p>
+    </div>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCRIPTS
+  ══════════════════════════════════════════════════════════════ -->
+  <script>
+    /* ── Background stars ─────────────────────────────── */
+    const starsContainer = document.getElementById('starsContainer');
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('span');
+      s.style.cssText = `
+        left:${Math.random()*100}%;
+        top:${Math.random()*100}%;
+        --d:${(2 + Math.random()*4).toFixed(1)}s;
+        --delay:-${(Math.random()*4).toFixed(1)}s;
+        opacity:${Math.random().toFixed(2)};
+        width:${Math.random()>.7?6:4}px;
+        height:${Math.random()>.7?6:4}px;
+      `;
+      starsContainer.appendChild(s);
+    }
+
+    /* ── Scene stars ──────────────────────────────────── */
+    const sceneStars = document.getElementById('sceneStars');
+    for (let i = 0; i < 30; i++) {
+      const s = document.createElement('div');
+      s.className = 's-star';
+      s.style.cssText = `
+        left:${Math.random()*100}%;
+        top:${5 + Math.random()*55}%;
+        --d:${(1.5 + Math.random()*3).toFixed(1)}s;
+        --delay:-${(Math.random()*3).toFixed(1)}s;
+      `;
+      sceneStars.appendChild(s);
+    }
+
+    /* ── Ticker ───────────────────────────────────────── */
+    const tickerItems = [
+      'ARCADE GAMES', 'PUZZLE', 'STRATEGY', 'ACTION',
+      'MULTIPLAYER', 'BROWSER NATIVE', 'NO INSTALL',
+      'PRIVATE ACCESS', 'BINARY SIGNAL', '01010000 01001100 01000001 01011001'
+    ];
+    const ticker = document.getElementById('ticker');
+    // duplicate for infinite scroll
+    [...tickerItems, ...tickerItems].forEach(txt => {
+      const span = document.createElement('span');
+      span.className = 'ticker-item';
+      span.innerHTML = `<span class="ticker-sep">◈</span> ${txt} `;
+      ticker.appendChild(span);
+    });
+
+    /* ── Binary rain grid ─────────────────────────────── */
+    const grid = document.getElementById('binaryGrid');
+    const COLS = 20, ROWS = 6;
+    for (let c = 0; c < COLS; c++) {
+      const col = document.createElement('div');
+      col.className = 'bin-col';
+      for (let r = 0; r < ROWS; r++) {
+        const d = document.createElement('div');
+        d.className = 'bin-digit';
+        d.textContent = Math.random() > .5 ? '1' : '0';
+        d.style.setProperty('--rd',   `${(1.5 + Math.random()*2.5).toFixed(1)}s`);
+        d.style.setProperty('--rdelay',`-${(Math.random()*3).toFixed(1)}s`);
+        col.appendChild(d);
+      }
+      grid.appendChild(col);
+    }
+
+    /* ── Randomise binary digits over time ────────────── */
+    setInterval(() => {
+      document.querySelectorAll('.bin-digit').forEach(el => {
+        if (Math.random() > .7) el.textContent = Math.random() > .5 ? '1' : '0';
+      });
+    }, 800);
+  </script>
+
+</body>
+</html>
