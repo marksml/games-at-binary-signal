@@ -194,11 +194,25 @@
                     </div>
                 </div>
             </div>
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/20 border border-emerald-400/40" title="Emeralds">
+                <span>💎</span>
+                <span id="emerald-count" class="font-display font-extrabold text-sm text-emerald-200">0</span>
+            </div>
+            <div id="bone-badge" class="hidden inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/25 border border-amber-300/50 text-amber-200">
+                🦴 Bone
+            </div>
             <div id="status-badge" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">
                 Exploring
             </div>
         </div>
     </header>
+
+    <!-- Top-Right Minimap -->
+    <div id="minimap-box" class="fixed top-20 right-3 z-20 pointer-events-none">
+        <div class="hud-glass rounded-2xl p-1.5 border-emerald-400/40 shadow-2xl">
+            <canvas id="minimap-canvas" width="240" height="240" class="rounded-xl block"></canvas>
+        </div>
+    </div>
 
     <!-- Discovery Toast Notification -->
     <div id="discovery-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0">
@@ -209,26 +223,43 @@
         </div>
     </div>
 
-    <!-- Bottom Action Controls Row (Centered outside main view focus) -->
-    <footer class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none w-full max-w-2xl px-3 flex justify-center">
-        <div class="hud-glass rounded-2xl p-1.5 sm:p-2 pointer-events-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            <button id="btn-time" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Switch Time of Day">
+    <!-- Unified Inventory Hotbar (Weapons & Building Parts, switchable via Mouse Wheel or 1-9) -->
+    <div id="inventory-hotbar" class="hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        <div class="hud-glass rounded-2xl px-2.5 py-1.5 flex items-center gap-1.5 text-xs font-bold text-white shadow-xl">
+            <div id="inventory-slots" class="flex items-center gap-1.5"></div>
+            <button id="build-btn-rotate" class="hidden px-2.5 py-1.5 rounded-xl bg-slate-800/70 border border-slate-400/30 hover:border-amber-300 cursor-pointer" title="Rotate (R)">
+                ↻ [R]
+            </button>
+            <button id="build-btn-place" class="hidden game-btn px-3 py-1.5 rounded-xl text-white cursor-pointer" title="Place Part (E / Right-Click)">
+                🔨 [E]
+            </button>
+        </div>
+    </div>
+
+    <!-- Top-Left Action Controls (Moved under the top-left HUD / compass) -->
+    <footer class="fixed top-20 left-3 z-20 pointer-events-none max-w-[300px] sm:max-w-[340px]">
+        <div class="hud-glass rounded-2xl p-1.5 pointer-events-auto flex flex-wrap items-center gap-1.5">
+            <button id="btn-time" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-semibold text-emerald-100 flex items-center gap-1 cursor-pointer" title="Switch Time of Day">
                 <span id="time-icon">☀️</span>
                 <span id="time-text">Noon</span>
             </button>
-            <button id="btn-camera" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Toggle Camera Perspective">
+            <button id="btn-camera" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-semibold text-emerald-100 flex items-center gap-1 cursor-pointer" title="Toggle Camera Perspective">
                 <span>🎥</span>
                 <span id="camera-text">3rd Person</span>
             </button>
-            <button id="btn-sound" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Toggle Ambient Sound">
+            <button id="btn-sound" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-semibold text-emerald-100 flex items-center gap-1 cursor-pointer" title="Toggle Ambient Sound">
                 <span id="sound-icon">🔇</span>
                 <span id="sound-text" class="hidden sm:inline">Sound</span>
             </button>
-            <button id="btn-reset" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Return to Valley Camp">
+            <button id="btn-reset" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-semibold text-emerald-100 flex items-center gap-1 cursor-pointer" title="Return to Valley Camp">
                 <span>🧭</span>
                 <span id="camp-text" class="hidden sm:inline">Camp</span>
             </button>
-            <button id="btn-help" class="game-btn rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 cursor-pointer" title="Controls & Map Guide">
+            <button id="btn-shop" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-semibold text-amber-200 border-amber-300/40 flex items-center gap-1 cursor-pointer" title="Open Upgrade Shop (B)">
+                <span>💎</span>
+                <span id="shop-btn-text">Shop</span>
+            </button>
+            <button id="btn-help" class="game-btn rounded-xl px-2.5 py-1.5 text-xs font-bold text-white flex items-center gap-1 cursor-pointer" title="Controls & Map Guide">
                 <span>🗺️</span>
                 <span id="guide-text">Guide</span>
             </button>
@@ -328,6 +359,25 @@
         </div>
     </div>
 
+    <!-- Upgrade Shop Modal -->
+    <div id="shop-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-emerald-950/75 backdrop-blur-md">
+        <div class="hud-glass rounded-3xl max-w-lg w-full p-6 border-emerald-400/40 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                    <h2 id="shop-title" class="font-display font-extrabold text-2xl text-white">💎 Emerald Shop</h2>
+                    <div class="text-xs text-emerald-200/80 mt-0.5">
+                        <span id="shop-balance-label">Your Emeralds:</span>
+                        <span class="font-bold text-amber-300 ml-1">💎 <span id="shop-emerald-count">0</span></span>
+                    </div>
+                </div>
+                <button id="btn-close-shop" class="game-btn-secondary rounded-xl px-3.5 py-2 text-xs font-bold text-emerald-100 cursor-pointer">
+                    ✕
+                </button>
+            </div>
+            <div id="shop-items" class="grid grid-cols-1 gap-2.5"></div>
+        </div>
+    </div>
+
     <script>
         /**
          * ============================================================================
@@ -359,7 +409,7 @@
                     swimming: '🏊 Swimming',
                     exploring: '🥾 Exploring'
                 },
-                timeNames: ['Noon', 'Sunset', 'Dawn Mist'],
+                timeNames: ['Noon', 'Sunset', 'Night', 'Dawn Mist'],
                 cam3rd: '3rd Person',
                 cam1st: '1st Person',
                 sound: 'Sound',
@@ -372,6 +422,51 @@
                 toastCampSub: 'Ready for a new expedition',
                 toastCrocTitle: '🐊 Snapped by a Crocodile!',
                 toastCrocSub: 'Watch out when swimming in the river! Teleported to the Sanctuary House.',
+                toastTreasureTitle: '👑 Secret Treasure Chamber!',
+                toastTreasureSub: 'You found the hidden gold deep inside the mountain!',
+                toastLionTitle: '🦁 Attacked by a Mountain Lion!',
+                toastLionSub: 'The mountain lions are fierce! Teleported to the Sanctuary House.',
+                toastMountainTreasureTitle: '🏆 Mountain Treasure Chamber!',
+                toastMountainTreasureSub: 'You discovered the hidden passage under the leaves deep into the mountain!',
+                boneBadge: '🦴 Ancient Bone',
+                toastBoneTitle: '🦴 Ancient Bone Found!',
+                toastBoneSub: 'Left-click when a Crocodile or Lion attacks to defeat it!',
+                toastDefeatedCroc: '💥 Crocodile Defeated!',
+                toastDefeatedLion: '💥 Mountain Lion Defeated!',
+                toastDefeatedStalker: '💥 Night Stalker Banished!',
+                toastStalkerTitle: '👻 Caught by a Night Stalker!',
+                toastStalkerSub: 'Beware the shadows at night! Teleported to the Sanctuary House.',
+                toastCrocRespawnTitle: '🐊 The River Stirs!',
+                toastCrocRespawnSub: 'New crocodiles have appeared in the canyon river!',
+                toastVillagerTitle: '🏘️ Villager Gift!',
+                toastVillagerSub: 'A friendly villager gave you',
+                toastDimEnterTitle: '🌀 Entered the Crystal Void!',
+                toastDimEnterSub: 'You stepped through the villager portal into another dimension!',
+                toastDimExitTitle: '🌍 Returned to Emerald Gorge',
+                toastDimExitSub: 'Back in the human village!',
+                shopBtn: 'Shop',
+                shopTitle: '💎 Emerald Shop',
+                shopBalanceLabel: 'Your Emeralds:',
+                shopBuy: 'Buy',
+                shopMaxed: 'MAX',
+                shopOwned: 'Owned',
+                shopHit: 'Hit!',
+                shopWeapons: {
+                    sword: { name: 'Emerald Sword', desc: '2 damage per left-click & 7.0 reach' },
+                    spear: { name: 'Flame Spear', desc: '3 damage per left-click & 8.5 reach' },
+                    hammer: { name: 'Thunder Hammer', desc: '5 damage per left-click & 10.5 reach' }
+                },
+                shopBuildings: {
+                    wall: { name: 'Stone Wall (×2)', desc: 'Solid defensive wall (Place with E / Right-Click)' },
+                    plank: { name: 'Wooden Plank (×2)', desc: 'Walkable bridge or ramp plank' },
+                    pillar: { name: 'Stone Pillar (×2)', desc: 'Tall column for towers & platforms' }
+                },
+                shopUpgrades: {
+                    speed: { name: 'Swift Boots', desc: '+20% walk & sprint speed per level' },
+                    jump: { name: 'Sky-Leap Springs', desc: '+15% jump height per level' },
+                    glider: { name: 'Wind Glider', desc: '+20% glide speed & slower descent' },
+                    boneReach: { name: 'Warrior Reach', desc: '+2.5 bone strike range per level' }
+                },
                 modalLangBtn: 'Deutsch',
                 welcomeTitle: 'Welcome to Emerald Gorge',
                 welcomeSub: 'Lush Tropical Mountains, Deep Green Gorges & Winding Rivers',
@@ -419,7 +514,7 @@
                     swimming: '🏊 Schwimmen',
                     exploring: '🥾 Erkunden'
                 },
-                timeNames: ['Mittag', 'Abendrot', 'Morgennebel'],
+                timeNames: ['Mittag', 'Abendrot', 'Nacht', 'Morgennebel'],
                 cam3rd: '3. Person',
                 cam1st: '1. Person',
                 sound: 'Ton',
@@ -432,6 +527,51 @@
                 toastCampSub: 'Bereit für eine neue Expedition',
                 toastCrocTitle: '🐊 Vom Krokodil geschnappt!',
                 toastCrocSub: 'Pass im Fluss auf! Du wurdest zum Rettungshaus teleportiert.',
+                toastTreasureTitle: '👑 Geheime Schatzkammer!',
+                toastTreasureSub: 'Du hast das verborgene Gold tief im Berg entdeckt!',
+                toastLionTitle: '🦁 Vom Berglöwen angegriffen!',
+                toastLionSub: 'Die Berglöwen sind gefährlich! Du wurdest zum Rettungshaus gebracht.',
+                toastMountainTreasureTitle: '🏆 Berg-Schatzkammer entdeckt!',
+                toastMountainTreasureSub: 'Du hast den geheimen Gang unter dem Laub tief in den Berg gefunden!',
+                boneBadge: '🦴 Uralter Knochen',
+                toastBoneTitle: '🦴 Uralter Knochen gefunden!',
+                toastBoneSub: 'Mache Linksklick, wenn ein Krokodil oder Löwe angreift, um es zu besiegen!',
+                toastDefeatedCroc: '💥 Krokodil besiegt!',
+                toastDefeatedLion: '💥 Berglöwe besiegt!',
+                toastDefeatedStalker: '💥 Schattengestalt vertrieben!',
+                toastStalkerTitle: '👻 Von einer Schattengestalt erwischt!',
+                toastStalkerSub: 'Hüte dich nachts vor den Gestalten! Du wurdest zum Rettungshaus gebracht.',
+                toastCrocRespawnTitle: '🐊 Neue Krokodile!',
+                toastCrocRespawnSub: 'Im Fluss sind wieder neue Krokodile aufgetaucht!',
+                toastVillagerTitle: '🏘️ Geschenk vom Dorfbewohner!',
+                toastVillagerSub: 'Ein freundlicher Bewohner schenkt dir',
+                toastDimEnterTitle: '🌀 Kristall-Dimension betreten!',
+                toastDimEnterSub: 'Du bist durch das Dorf-Portal in eine andere Dimension gereist!',
+                toastDimExitTitle: '🌍 Zurück in der Smaragdschlucht',
+                toastDimExitSub: 'Wieder zurück im Menschendorf!',
+                shopBtn: 'Shop',
+                shopTitle: '💎 Smaragd-Shop',
+                shopBalanceLabel: 'Deine Smaragde:',
+                shopBuy: 'Kaufen',
+                shopMaxed: 'MAX',
+                shopOwned: 'Besitzt',
+                shopHit: 'Treffer!',
+                shopWeapons: {
+                    sword: { name: 'Smaragd-Schwert', desc: '2 Schaden pro Linksklick & 7.0 Reichweite' },
+                    spear: { name: 'Feuer-Speer', desc: '3 Schaden pro Linksklick & 8.5 Reichweite' },
+                    hammer: { name: 'Donner-Hammer', desc: '5 Schaden pro Linksklick & 10.5 Reichweite' }
+                },
+                shopBuildings: {
+                    wall: { name: 'Steinmauer (×2)', desc: 'Stabile Mauer zum Bauen (Taste E / Rechtsklick)' },
+                    plank: { name: 'Holzbrett (×2)', desc: 'Begehbares Brett für Brücken & Rampen' },
+                    pillar: { name: 'Steinsäule (×2)', desc: 'Hohe Säule für Türme & Plattformen' }
+                },
+                shopUpgrades: {
+                    speed: { name: 'Sprint-Stiefel', desc: '+20% Lauf- & Sprinttempo pro Stufe' },
+                    jump: { name: 'Sprungfedern', desc: '+15% Sprunghöhe pro Stufe' },
+                    glider: { name: 'Wind-Gleiter', desc: '+20% Gleittempo & langsameres Sinken' },
+                    boneReach: { name: 'Knochen-Reichweite', desc: '+2.5 Schlagreichweite pro Stufe' }
+                },
                 modalLangBtn: 'English',
                 welcomeTitle: 'Willkommen in der Smaragdschlucht',
                 welcomeSub: 'Tropische Berge, tiefe grüne Schluchten & gewundene Flüsse',
@@ -463,10 +603,22 @@
         };
 
         // --- World & Physics Constants ---
-        const WORLD_SIZE = 620;
-        const TERRAIN_SEGMENTS = 248; // High-resolution 248x248 terrain mesh for crisp gorge cliffs
-        const HOUSE_POS = { x: 115, z: 145, y: 18.0 };
+        const WORLD_SIZE = 1400;
+        const TERRAIN_SEGMENTS = 320; // High-resolution 320x320 terrain mesh for crisp gorge cliffs
+        const HOUSE_POS = { x: 145, z: -130, y: 19.0 };
         const HOUSE_SPAWN = { x: HOUSE_POS.x, z: HOUSE_POS.z + 6.0 };
+        const VILLAGE_POS = { x: -240, z: -220, y: 18.0 };
+        const VILLAGE_PORTAL_POS = { x: VILLAGE_POS.x, z: VILLAGE_POS.z - 19.2 };
+        const DIM_POS = { x: -580, y: 120.0, z: -580, radius: 38.0 };
+        const DIM_RETURN_PORTAL = { x: DIM_POS.x, z: DIM_POS.z - 14.0 };
+        const FOREST_POS = { x: -135, z: 130, radius: 64 };
+        const HIDDEN_CAVES = [
+            { x: -125, z: 118 },
+            { x: -158, z: 152 }
+        ];
+        const TREASURE_CHAMBER = { x: HIDDEN_CAVES[1].x - 32.0, z: HIDDEN_CAVES[1].z - 35.0 };
+        const SECRET_PASSAGE_POS = { x: -128, z: 78 };
+        const MOUNTAIN_TREASURE = { x: -124, z: 22 };
         const WATER_LEVEL = 0.0;
         const GRAVITY = -26.0;
         const GLIDE_GRAVITY = -4.2;
@@ -480,6 +632,49 @@
         let bridgeCollider = null;
         let crocodiles = [];
         let crocCooldown = 0;
+        let lions = [];
+        let lionCooldown = 0;
+        let nightStalkers = [];
+        let stalkerCooldown = 0;
+        let villagers = [];
+        let inOtherDimension = false;
+        let portalCooldown = 0;
+        let portalMeshes = [];
+        let dimensionEmeralds = [];
+        let treasureFound = false;
+        let mountainTreasureFound = false;
+        let hasBone = false;
+        let bonePickups = [];
+        let playerBoneMesh = null;
+        let boneSwingTimer = 0;
+        let emeralds = 0;
+        let emeraldShards = [];
+        const upgrades = { speed: 0, jump: 0, glider: 0, boneReach: 0 };
+        const ownedWeapons = { bone: false, sword: false, spear: false, hammer: false };
+        let activeWeapon = null;
+        const WEAPON_CONFIG = [
+            { id: 'sword', cost: 45, damage: 2, reach: 7.0, icon: '⚔️' },
+            { id: 'spear', cost: 75, damage: 3, reach: 8.5, icon: '🔱' },
+            { id: 'hammer', cost: 120, damage: 5, reach: 10.5, icon: '🔨' }
+        ];
+        const buildingInventory = { wall: 0, plank: 0, pillar: 0 };
+        let selectedBuildType = null;
+        let activeInventoryIndex = 0;
+        let buildRotation = 0;
+        let buildGhost = null;
+        let placedStructures = [];
+        const BUILDING_CONFIG = [
+            { id: 'wall', cost: 5, amount: 2, icon: '🧱', size: [3.2, 2.4, 0.8] },
+            { id: 'plank', cost: 4, amount: 2, icon: '🪵', size: [3.6, 0.35, 2.2] },
+            { id: 'pillar', cost: 4, amount: 2, icon: '🏛️', size: [0.9, 3.0, 0.9] }
+        ];
+        let dayCycleTime = 0;
+        const UPGRADE_CONFIG = [
+            { id: 'speed', max: 3, costs: [10, 15, 20], icon: '🥾' },
+            { id: 'jump', max: 3, costs: [10, 15, 20], icon: '🦘' },
+            { id: 'glider', max: 3, costs: [12, 18, 25], icon: '🪂' },
+            { id: 'boneReach', max: 2, costs: [15, 25], icon: '🦴' }
+        ];
         let relics = [];
         let clouds = [];
         let birds = [];
@@ -547,6 +742,18 @@
                 hemiSky: 0xffb38a,
                 hemiGround: 0x1a3c2f,
                 hemiIntensity: 0.68
+            },
+            {
+                icon: '🌙',
+                sky: 0x0f172a,
+                fog: 0x1e293b,
+                fogDensity: 0.0052,
+                sunColor: 0x93c5fd,
+                sunIntensity: 0.55,
+                sunPos: [-60, 110, -80],
+                hemiSky: 0x334155,
+                hemiGround: 0x0f172a,
+                hemiIntensity: 0.35
             },
             {
                 icon: '🌫️',
@@ -673,10 +880,9 @@
         }
 
         /**
-         * Computes exact terrain elevation at (x, z), carving out a deep lush river gorge
-         * flanked by stepped tropical cliffs, riverbanks, and towering mountain peaks.
+         * Computes natural terrain elevation at (x, z) before any man-made flattening or caves.
          */
-        function getTerrainHeight(x, z) {
+        function getRawTerrainHeight(x, z) {
             const riverX = getRiverCenterX(z);
             const distToRiver = Math.abs(x - riverX);
 
@@ -698,36 +904,123 @@
             elevation += peak1 + peak2 + peak3 + peak4;
 
             // Gentle outer rim containment so the player stays inside a natural basin
-            if (radialDist > 245) {
-                elevation += (radialDist - 245) * 0.55;
+            if (radialDist > 600) {
+                elevation += (radialDist - 600) * 0.55;
             }
 
             // Carve the turquoise river channel and steep green gorge walls
-            let finalHeight;
             if (distToRiver < 11.5) {
-                // Smooth riverbed below WATER_LEVEL (0.0)
                 const riverFactor = distToRiver / 11.5;
                 const bedDepth = -2.4 * (1.0 - riverFactor * riverFactor);
-                finalHeight = bedDepth + microDetail * 0.15;
+                return bedDepth + microDetail * 0.15;
             } else if (distToRiver < 24.0) {
-                // Riverbank & lower green gorge terrace
                 const t = (distToRiver - 11.5) / 12.5;
                 const smoothT = t * t * (3.0 - 2.0 * t);
                 const bankHeight = THREE.MathUtils.lerp(0.1, 7.5, smoothT);
-                finalHeight = bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
+                return bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
             } else {
-                // Steep gorge walls transitioning into highlands & mountains
                 const wallT = THREE.MathUtils.smoothstep(distToRiver, 24.0, 52.0);
-                // Add subtle rocky cliff ledges along gorge walls
                 const ledge = Math.sin(elevation * 0.65) * 0.45 * wallT;
-                finalHeight = THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
+                return THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
             }
+        }
+
+        // Place the Sanctuary House & Human Civilization cleanly on the natural terrain surface
+        HOUSE_POS.y = Math.max(WATER_LEVEL + 4.0, getRawTerrainHeight(HOUSE_POS.x, HOUSE_POS.z));
+        VILLAGE_POS.y = Math.max(WATER_LEVEL + 5.0, getRawTerrainHeight(VILLAGE_POS.x, VILLAGE_POS.z));
+
+        /**
+         * Computes exact terrain elevation at (x, z), including the surface plateau
+         * for the Sanctuary House and the carved underground caves & secret passages.
+         */
+        function getTerrainHeight(x, z) {
+            let finalHeight = getRawTerrainHeight(x, z);
 
             // Flatten a scenic plateau for the Respawn Sanctuary House
             const distToHouse = Math.hypot(x - HOUSE_POS.x, z - HOUSE_POS.z);
             if (distToHouse < 16.0) {
                 const flatT = 1.0 - THREE.MathUtils.smoothstep(distToHouse, 8.0, 16.0);
                 finalHeight = THREE.MathUtils.lerp(finalHeight, HOUSE_POS.y, flatT);
+            }
+
+            // Flatten a spacious plateau for the Human Civilization / Village
+            const distToVillage = Math.hypot(x - VILLAGE_POS.x, z - VILLAGE_POS.z);
+            if (distToVillage < 46.0) {
+                const vFlatT = 1.0 - THREE.MathUtils.smoothstep(distToVillage, 30.0, 46.0);
+                finalHeight = THREE.MathUtils.lerp(finalHeight, VILLAGE_POS.y, vFlatT);
+            }
+
+            // Carve two hidden caves with a long, deep walkable underground corridor
+            // plus a secret deeper passage into the mountain ending in a Treasure Chamber
+            for (let c = 0; c < HIDDEN_CAVES.length; c++) {
+                const cave = HIDDEN_CAVES[c];
+                const cdx = x - cave.x;
+                const cdz = z - cave.z;
+                if (cdx > -43.0 && cdx < 12.0 && cdz > -46.0 && cdz < 11.5) {
+                    const ellipseDist = Math.hypot(cdx * 1.15, (cdz + 3.2) * 0.62);
+                    const chamberCarve = 7.4 * (1.0 - THREE.MathUtils.smoothstep(ellipseDist, 3.8, 8.2));
+                    let rampCarve = 0;
+                    if (cdz > -2.0 && Math.abs(cdx) < 2.6 && cdz < 11.0) {
+                        const sideFade = 1.0 - THREE.MathUtils.smoothstep(Math.abs(cdx), 1.1, 2.6);
+                        const lenFade = 1.0 - THREE.MathUtils.smoothstep(cdz, 2.5, 10.5);
+                        rampCarve = 6.6 * sideFade * lenFade;
+                    }
+                    let tunnelCarve = 0;
+                    if (cdz < -3.0 && cdz > -41.5 && Math.abs(cdx) < 12.0) {
+                        const tunnelCenterX = Math.sin((cdz + 4.0) * 0.13) * 2.2;
+                        const tunnelDistX = Math.abs(cdx - tunnelCenterX);
+                        const progress = THREE.MathUtils.clamp((-cdz - 4.0) / 31.0, 0, 1);
+                        const halfWidth = progress > 0.82 ? THREE.MathUtils.lerp(2.5, 4.6, (progress - 0.82) / 0.18) : 2.5;
+                        if (tunnelDistX < halfWidth + 2.2) {
+                            const tunnelDepth = THREE.MathUtils.lerp(7.3, 11.2, progress);
+                            const tSide = 1.0 - THREE.MathUtils.smoothstep(tunnelDistX, halfWidth * 0.6, halfWidth + 2.1);
+                            const tFront = cdz > -6.5 ? THREE.MathUtils.smoothstep(-cdz, 3.0, 6.5) : 1.0;
+                            const tBack = cdz < -35.5 ? (1.0 - THREE.MathUtils.smoothstep(-cdz, 35.5, 41.5)) : 1.0;
+                            tunnelCarve = tunnelDepth * tSide * tFront * tBack;
+                        }
+                    }
+
+                    let secretCarve = 0;
+                    let treasureCarve = 0;
+                    if (c === 1) {
+                        if (cdx < 1.5 && cdx > -31.0) {
+                            const secretCenterZ = -35.0 + Math.sin(cdx * 0.22) * 2.0;
+                            const secretDistZ = Math.abs(cdz - secretCenterZ);
+                            if (secretDistZ < 4.2) {
+                                const sProgress = THREE.MathUtils.clamp(-cdx / 28.0, 0, 1);
+                                const secretDepth = THREE.MathUtils.lerp(11.2, 16.5, sProgress);
+                                const sSide = 1.0 - THREE.MathUtils.smoothstep(secretDistZ, 1.4, 3.8);
+                                const sFront = cdx > -2.5 ? THREE.MathUtils.smoothstep(1.5, -2.5, cdx) : 1.0;
+                                secretCarve = secretDepth * sSide * sFront;
+                            }
+                        }
+                        const tcDist = Math.hypot(cdx + 32.0, cdz + 35.0);
+                        if (tcDist < 9.5) {
+                            treasureCarve = 17.0 * (1.0 - THREE.MathUtils.smoothstep(tcDist, 5.2, 9.2));
+                        }
+                    }
+
+                    finalHeight -= Math.max(chamberCarve, rampCarve, tunnelCarve, secretCarve, treasureCarve);
+                }
+            }
+
+            // Carve the new secret passage under the foliage leading deep into the mountain to a Treasure Chamber
+            if (x > -142.0 && x < -110.0 && z > 13.0 && z < 84.0) {
+                const spCenterX = SECRET_PASSAGE_POS.x + Math.sin(Math.min(0, z - SECRET_PASSAGE_POS.z) * 0.1) * 3.5;
+                const spDistX = Math.abs(x - spCenterX);
+                const mcDist = Math.hypot(x - MOUNTAIN_TREASURE.x, z - MOUNTAIN_TREASURE.z);
+                const tProg = THREE.MathUtils.clamp((SECRET_PASSAGE_POS.z - z) / (SECRET_PASSAGE_POS.z - MOUNTAIN_TREASURE.z), 0, 1);
+                const targetFloorY = THREE.MathUtils.lerp(15.5, 7.5, tProg);
+
+                const entranceBlend = z > 76.0 ? THREE.MathUtils.smoothstep(z, 84.0, 76.0) : 1.0;
+                const tunnelSide = 1.0 - THREE.MathUtils.smoothstep(spDistX, 1.5, 3.6);
+                const chamberBlend = mcDist < 9.5 ? (1.0 - THREE.MathUtils.smoothstep(mcDist, 5.2, 9.5)) : 0.0;
+                const backBlend = z < 20.0 ? (1.0 - THREE.MathUtils.smoothstep(z, 20.0, 13.5)) : 1.0;
+
+                const totalBlend = Math.max(entranceBlend * tunnelSide * backBlend, chamberBlend);
+                if (totalBlend > 0 && finalHeight > targetFloorY) {
+                    finalHeight = THREE.MathUtils.lerp(finalHeight, targetFloorY, totalBlend);
+                }
             }
 
             return finalHeight;
@@ -786,7 +1079,7 @@
             scene.background = new THREE.Color(TIME_PRESETS[0].sky);
             scene.fog = new THREE.FogExp2(TIME_PRESETS[0].fog, TIME_PRESETS[0].fogDensity);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 900);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 1800);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -816,8 +1109,8 @@
             sunLight.shadow.mapSize.width = 2048;
             sunLight.shadow.mapSize.height = 2048;
             sunLight.shadow.camera.near = 10;
-            sunLight.shadow.camera.far = 550;
-            const d = 220;
+            sunLight.shadow.camera.far = 900;
+            const d = 320;
             sunLight.shadow.camera.left = -d;
             sunLight.shadow.camera.right = d;
             sunLight.shadow.camera.top = d;
@@ -830,12 +1123,18 @@
             buildWater();
             buildBaseCampAndBridge();
             buildRespawnHouse();
+            buildHumanCivilization();
+            buildOtherDimension();
             buildCrocodiles();
+            buildLions();
+            buildNightStalkers();
             buildTropicalFlora();
+            buildDeciduousForestAndCaves();
             buildWaterfalls();
             buildCloudsBirdsAndFireflies();
             buildPlayer();
             buildRelics();
+            buildEmeraldShards();
 
             // Place player safely at Valley Base Camp
             player.pos.set(14, getTerrainHeight(14, 55) + 0.1, 55);
@@ -1125,6 +1424,337 @@
         }
 
         /**
+         * Builds a bustling Human Civilization / Village with houses, market stalls,
+         * a central stone fountain, and friendly villagers who occasionally gift Emeralds!
+         */
+        function buildHumanCivilization() {
+            const villageGroup = new THREE.Group();
+            const vy = VILLAGE_POS.y;
+            villageGroup.position.set(VILLAGE_POS.x, vy, VILLAGE_POS.z);
+
+            const stoneMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9, flatShading: true });
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.85, flatShading: true });
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.88, flatShading: true });
+            const roofMats = [
+                new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.78, flatShading: true }),
+                new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.78, flatShading: true }),
+                new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.78, flatShading: true })
+            ];
+            const winMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+
+            // Central stone town square & fountain
+            const plaza = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 9.0, 0.25, 16), stoneMat);
+            plaza.position.y = 0.08;
+            plaza.receiveShadow = true;
+            villageGroup.add(plaza);
+
+            const fountainBase = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.5, 0.75, 10), stoneMat);
+            fountainBase.position.y = 0.45;
+            villageGroup.add(fountainBase);
+            const fountainWater = new THREE.Mesh(
+                new THREE.CylinderGeometry(1.9, 1.9, 0.6, 10),
+                new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+            );
+            fountainWater.position.y = 0.55;
+            villageGroup.add(fountainWater);
+            const fountainPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.8, 8), stoneMat);
+            fountainPillar.position.y = 1.25;
+            villageGroup.add(fountainPillar);
+
+            // 6 Village Houses arranged in a welcoming ring
+            const houseSpots = [
+                { x: -16, z: -12, ry: 0.6 },
+                { x: 0, z: -18, ry: 0.0 },
+                { x: 16, z: -12, ry: -0.6 },
+                { x: -18, z: 8, ry: 1.9 },
+                { x: 18, z: 8, ry: -1.9 },
+                { x: -8, z: 18, ry: 2.8 }
+            ];
+            houseSpots.forEach((hs, idx) => {
+                const h = new THREE.Group();
+                h.position.set(hs.x, 0, hs.z);
+                h.rotation.y = hs.ry;
+
+                if (idx === 1) {
+                    // Walkable Villager House with open front doorway & Dimensional Portal inside
+                    const backWall = new THREE.Mesh(new THREE.BoxGeometry(6.4, 3.8, 0.3), wallMat);
+                    backWall.position.set(0, 1.9, -2.8);
+                    backWall.castShadow = true;
+                    backWall.receiveShadow = true;
+                    h.add(backWall);
+
+                    [-3.05, 3.05].forEach(wx => {
+                        const sideWall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.8, 5.8), wallMat);
+                        sideWall.position.set(wx, 1.9, 0);
+                        sideWall.castShadow = true;
+                        sideWall.receiveShadow = true;
+                        h.add(sideWall);
+                    });
+
+                    // Front wall with open 2.2-unit-wide doorway
+                    [-2.15, 2.15].forEach(fx => {
+                        const frontSeg = new THREE.Mesh(new THREE.BoxGeometry(2.1, 3.8, 0.3), wallMat);
+                        frontSeg.position.set(fx, 1.9, 2.8);
+                        frontSeg.castShadow = true;
+                        h.add(frontSeg);
+                    });
+                    const lintel = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 0.3), wallMat);
+                    lintel.position.set(0, 3.25, 2.8);
+                    h.add(lintel);
+
+                    const floorPad = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.2, 5.8), woodMat);
+                    floorPad.position.set(0, 0.1, 0);
+                    floorPad.receiveShadow = true;
+                    h.add(floorPad);
+
+                    const roof = new THREE.Mesh(new THREE.ConeGeometry(5.2, 2.5, 4), roofMats[2]);
+                    roof.position.y = 5.05;
+                    roof.rotation.y = Math.PI / 4;
+                    roof.castShadow = true;
+                    h.add(roof);
+
+                    // Glowing Dimensional Portal inside the house
+                    const pGroup = new THREE.Group();
+                    pGroup.position.set(0, 1.85, -1.2);
+                    const pRing = new THREE.Mesh(
+                        new THREE.TorusGeometry(1.15, 0.14, 10, 24),
+                        new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9, flatShading: true })
+                    );
+                    const pCore = new THREE.Mesh(
+                        new THREE.CircleGeometry(1.05, 24),
+                        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.78, side: THREE.DoubleSide })
+                    );
+                    const pLight = new THREE.PointLight(0xa855f7, 2.6, 16);
+                    pGroup.add(pRing, pCore, pLight);
+                    h.add(pGroup);
+                    portalMeshes.push(pRing, pCore);
+                } else {
+                    const body = new THREE.Mesh(new THREE.BoxGeometry(5.2, 3.0, 4.4), wallMat);
+                    body.position.y = 1.5;
+                    body.castShadow = true;
+                    body.receiveShadow = true;
+                    h.add(body);
+
+                    const roof = new THREE.Mesh(new THREE.ConeGeometry(4.3, 2.3, 4), roofMats[idx % roofMats.length]);
+                    roof.position.y = 4.1;
+                    roof.rotation.y = Math.PI / 4;
+                    roof.castShadow = true;
+                    h.add(roof);
+
+                    const door = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.9, 0.16), woodMat);
+                    door.position.set(0, 0.95, 2.22);
+                    h.add(door);
+
+                    [-1.4, 1.4].forEach(wx => {
+                        const win = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.75, 0.14), winMat);
+                        win.position.set(wx, 1.8, 2.22);
+                        h.add(win);
+                    });
+                }
+
+                villageGroup.add(h);
+            });
+
+            // Market Stall with warm lantern
+            const stall = new THREE.Group();
+            stall.position.set(10, 0, 15);
+            stall.rotation.y = -2.5;
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.0, 1.4), woodMat);
+            counter.position.y = 0.5;
+            stall.add(counter);
+            const awning = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.18, 2.2), roofMats[1]);
+            awning.position.set(0, 2.5, 0);
+            awning.rotation.x = 0.15;
+            stall.add(awning);
+            [-1.6, 1.6].forEach(px => {
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.5, 0.16), woodMat);
+                post.position.set(px, 1.25, -0.55);
+                stall.add(post);
+            });
+            villageGroup.add(stall);
+
+            const villageLight = new THREE.PointLight(0xfbbf24, 2.4, 42);
+            villageLight.position.set(0, 5.5, 0);
+            villageGroup.add(villageLight);
+
+            scene.add(villageGroup);
+
+            // 8 Friendly Villagers roaming the town square & gifting Emeralds
+            const tunicColors = [0x2563eb, 0xdc2626, 0x16a34a, 0x9333ea, 0xea580c, 0x0891b2, 0xca8a04, 0xdb2777];
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xf1c27d, flatShading: true });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155, flatShading: true });
+
+            for (let i = 0; i < 8; i++) {
+                const vGroup = new THREE.Group();
+                const tunicMat = new THREE.MeshStandardMaterial({ color: tunicColors[i % tunicColors.length], flatShading: true });
+
+                const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.85, 0.4), tunicMat);
+                torso.position.y = 1.25;
+                torso.castShadow = true;
+                vGroup.add(torso);
+
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), skinMat);
+                head.position.y = 1.95;
+                head.castShadow = true;
+                vGroup.add(head);
+
+                const legGeo = new THREE.BoxGeometry(0.22, 0.78, 0.24);
+                const lLeg = new THREE.Mesh(legGeo, pantsMat);
+                lLeg.position.set(-0.17, 0.4, 0);
+                const rLeg = new THREE.Mesh(legGeo, pantsMat);
+                rLeg.position.set(0.17, 0.4, 0);
+                vGroup.add(lLeg, rLeg);
+
+                const ang = (i / 8) * Math.PI * 2;
+                const homeX = VILLAGE_POS.x + Math.cos(ang) * (7 + (i % 3) * 4);
+                const homeZ = VILLAGE_POS.z + Math.sin(ang) * (7 + (i % 3) * 4);
+                vGroup.position.set(homeX, vy, homeZ);
+                scene.add(vGroup);
+
+                villagers.push({
+                    group: vGroup,
+                    lLeg,
+                    rLeg,
+                    homeX,
+                    homeZ,
+                    phase: i * 1.15,
+                    yaw: 0,
+                    giftCooldown: 0
+                });
+            }
+        }
+
+        /**
+         * Updates friendly villagers strolling around the civilization and occasionally
+         * gifting Emeralds when the player approaches.
+         */
+        function updateVillagers(elapsed, dt) {
+            villagers.forEach(v => {
+                if (v.giftCooldown > 0) v.giftCooldown -= dt;
+
+                const distToPlayer = Math.hypot(player.pos.x - v.group.position.x, player.pos.z - v.group.position.z);
+
+                if (distToPlayer < 3.8) {
+                    // Face the player politely
+                    v.yaw = Math.atan2(player.pos.x - v.group.position.x, player.pos.z - v.group.position.z);
+                    v.lLeg.rotation.x *= 0.85;
+                    v.rLeg.rotation.x *= 0.85;
+
+                    if (v.giftCooldown <= 0) {
+                        v.giftCooldown = 45.0; // Can gift again after 45s
+                        if (Math.random() < 0.8) {
+                            const gift = 3 + Math.floor(Math.random() * 4);
+                            addEmeralds(gift);
+                            spawnDiscoveryBurst(v.group.position);
+                            playDiscoveryChime();
+                            const t = I18N[currentLang];
+                            showDiscoveryToast(t.toastVillagerTitle, `${t.toastVillagerSub} +${gift} 💎!`);
+                        }
+                    }
+                } else {
+                    const targetX = v.homeX + Math.cos(elapsed * 0.45 + v.phase) * 6.5;
+                    const targetZ = v.homeZ + Math.sin(elapsed * 0.38 + v.phase) * 6.5;
+                    const dx = targetX - v.group.position.x;
+                    const dz = targetZ - v.group.position.z;
+                    if (Math.hypot(dx, dz) > 0.15) {
+                        v.yaw = Math.atan2(dx, dz);
+                        v.group.position.x += Math.sin(v.yaw) * 2.1 * dt;
+                        v.group.position.z += Math.cos(v.yaw) * 2.1 * dt;
+                        const swing = Math.sin(elapsed * 5.0 + v.phase) * 0.45;
+                        v.lLeg.rotation.x = swing;
+                        v.rLeg.rotation.x = -swing;
+                    }
+                }
+
+                v.group.position.y = getTerrainHeight(v.group.position.x, v.group.position.z);
+                v.group.rotation.y = v.yaw;
+            });
+        }
+
+        /**
+         * Builds the floating Crystal Void Dimension high in the sky, reachable via the
+         * portal inside the villager's house, complete with giant crystals, bonus emeralds, and a return portal.
+         */
+        function buildOtherDimension() {
+            const dimGroup = new THREE.Group();
+            dimGroup.position.set(DIM_POS.x, DIM_POS.y, DIM_POS.z);
+
+            const islandMat = new THREE.MeshStandardMaterial({ color: 0x3b0764, roughness: 0.85, flatShading: true });
+            const rimMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.9, flatShading: true });
+            const crystalMat = new THREE.MeshStandardMaterial({ color: 0xe879f9, emissive: 0xa855f7, emissiveIntensity: 0.7, roughness: 0.18, flatShading: true });
+            const cyanMat = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 0.8, roughness: 0.2, flatShading: true });
+
+            // Main floating crystal island disc
+            const platform = new THREE.Mesh(new THREE.CylinderGeometry(DIM_POS.radius, DIM_POS.radius * 0.72, 4.0, 18), islandMat);
+            platform.position.y = -2.0;
+            platform.receiveShadow = true;
+            dimGroup.add(platform);
+
+            // Floating crystal spires around the edge
+            for (let i = 0; i < 14; i++) {
+                const ang = (i / 14) * Math.PI * 2;
+                const r = DIM_POS.radius - 4.0;
+                const h = 5.0 + (i % 4) * 3.2;
+                const spire = new THREE.Mesh(new THREE.OctahedronGeometry(2.1, 0), i % 2 === 0 ? crystalMat : cyanMat);
+                spire.scale.set(0.75, h / 2.5, 0.75);
+                spire.position.set(Math.cos(ang) * r, h * 0.4, Math.sin(ang) * r);
+                spire.rotation.y = ang;
+                dimGroup.add(spire);
+            }
+
+            // Floating outer satellite rocks
+            for (let s = 0; s < 6; s++) {
+                const ang = (s / 6) * Math.PI * 2 + 0.3;
+                const sat = new THREE.Mesh(new THREE.DodecahedronGeometry(3.5, 0), rimMat);
+                sat.position.set(Math.cos(ang) * (DIM_POS.radius + 12), 2.5 + (s % 2) * 3.5, Math.sin(ang) * (DIM_POS.radius + 12));
+                dimGroup.add(sat);
+            }
+
+            // Return Portal back to the Village
+            const retGroup = new THREE.Group();
+            retGroup.position.set(0, 1.85, -14.0);
+            const retRing = new THREE.Mesh(
+                new THREE.TorusGeometry(1.35, 0.16, 10, 24),
+                new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x10b981, emissiveIntensity: 0.9, flatShading: true })
+            );
+            const retCore = new THREE.Mesh(
+                new THREE.CircleGeometry(1.2, 24),
+                new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.78, side: THREE.DoubleSide })
+            );
+            const retLight = new THREE.PointLight(0x34d399, 2.8, 18);
+            retGroup.add(retRing, retCore, retLight);
+            dimGroup.add(retGroup);
+            portalMeshes.push(retRing, retCore);
+
+            // 10 Bonus Dimension Emeralds (+5 each!)
+            const dimShardMat = new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x10b981, emissiveIntensity: 0.85, roughness: 0.15, flatShading: true });
+            for (let e = 0; e < 10; e++) {
+                const ang = (e / 10) * Math.PI * 2;
+                const r = 10 + (e % 3) * 7;
+                const ex = Math.cos(ang) * r;
+                const ez = Math.sin(ang) * r;
+                const shard = new THREE.Mesh(new THREE.OctahedronGeometry(0.65, 0), dimShardMat);
+                shard.scale.set(0.85, 1.4, 0.85);
+                shard.position.set(ex, 1.4, ez);
+                dimGroup.add(shard);
+                dimensionEmeralds.push({
+                    mesh: shard,
+                    worldX: DIM_POS.x + ex,
+                    worldZ: DIM_POS.z + ez,
+                    baseY: 1.4,
+                    collected: false,
+                    phase: e * 0.8
+                });
+            }
+
+            const dimLight = new THREE.PointLight(0xd946ef, 3.0, 65);
+            dimLight.position.set(0, 14, 0);
+            dimGroup.add(dimLight);
+
+            scene.add(dimGroup);
+        }
+
+        /**
          * Computes the solid deck height of the wooden suspension bridge at (x, z),
          * or returns -Infinity if the player is not above the bridge planks.
          */
@@ -1151,7 +1781,7 @@
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
             const toothMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
 
-            const crocZones = [-210, -155, -95, -55, -18, 16, 66, 98, 155, 210];
+            const crocZones = [-380, -300, -210, -155, -95, -55, -18, 16, 66, 98, 155, 210, 300, 380];
 
             crocZones.forEach((baseZ, idx) => {
                 const croc = new THREE.Group();
@@ -1236,7 +1866,9 @@
                     homeZ: baseZ,
                     patrolPhase: idx * 1.3,
                     yaw: 0,
-                    chasing: false
+                    chasing: false,
+                    hp: 4,
+                    maxHp: 4
                 });
             });
         }
@@ -1247,10 +1879,26 @@
         function updateCrocodiles(elapsed, dt) {
             if (crocCooldown > 0) crocCooldown -= dt;
 
+            // Respawn defeated crocodiles when only 3 or fewer remain alive
+            const aliveCrocs = crocodiles.filter(c => !c.defeated).length;
+            if (crocodiles.length > 3 && aliveCrocs <= 3) {
+                crocodiles.forEach(c => {
+                    if (c.defeated) {
+                        c.defeated = false;
+                        c.hp = c.maxHp;
+                        c.group.position.set(getRiverCenterX(c.homeZ), WATER_LEVEL - 0.05, c.homeZ);
+                        c.group.visible = true;
+                    }
+                });
+                const t = I18N[currentLang];
+                showDiscoveryToast(t.toastCrocRespawnTitle, t.toastCrocRespawnSub);
+            }
+
             const playerDistToRiver = Math.abs(player.pos.x - getRiverCenterX(player.pos.z));
             const playerVulnerable = player.inWater || (player.pos.y <= WATER_LEVEL + 0.35 && playerDistToRiver < 11.2);
 
             crocodiles.forEach(c => {
+                if (c.defeated) return;
                 const distToPlayer = Math.hypot(player.pos.x - c.group.position.x, player.pos.z - c.group.position.z);
                 c.chasing = playerVulnerable && distToPlayer < 34.0 && crocCooldown <= 0;
 
@@ -1320,6 +1968,380 @@
         }
 
         /**
+         * Spawns 3D mountain lions patrolling the highland slopes that chase
+         * and attack the player when approached on land.
+         */
+        function buildLions() {
+            const furMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.82, flatShading: true });
+            const bellyMat = new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.85, flatShading: true });
+            const maneMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9, flatShading: true });
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+            const darkMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+
+            const lionZones = [
+                { x: -85, z: -65 },
+                { x: 85, z: -80 },
+                { x: 95, z: 75 },
+                { x: -95, z: 45 },
+                { x: 60, z: -135 }
+            ];
+
+            lionZones.forEach((zone, idx) => {
+                const lion = new THREE.Group();
+
+                // Muscular torso & lighter underbelly
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.68, 1.85), furMat);
+                body.position.y = 0.92;
+                body.castShadow = true;
+                lion.add(body);
+
+                const belly = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.22, 1.6), bellyMat);
+                belly.position.y = 0.56;
+                lion.add(belly);
+
+                // Thick Lion Mane
+                const mane = new THREE.Mesh(new THREE.DodecahedronGeometry(0.68, 0), maneMat);
+                mane.position.set(0, 1.18, 0.82);
+                mane.scale.set(1.05, 1.08, 0.95);
+                mane.castShadow = true;
+                lion.add(mane);
+
+                // Head, Snout, Ears & Eyes
+                const headGroup = new THREE.Group();
+                headGroup.position.set(0, 1.2, 1.05);
+
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.56, 0.64), furMat);
+                head.castShadow = true;
+                headGroup.add(head);
+
+                const snout = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.28, 0.36), bellyMat);
+                snout.position.set(0, -0.08, 0.38);
+                headGroup.add(snout);
+
+                const nose = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.1), darkMat);
+                nose.position.set(0, 0.02, 0.56);
+                headGroup.add(nose);
+
+                [-0.22, 0.22].forEach(ex => {
+                    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.1), furMat);
+                    ear.position.set(ex, 0.34, -0.05);
+                    headGroup.add(ear);
+
+                    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.06, 5, 5), eyeMat);
+                    eye.position.set(ex * 0.85, 0.08, 0.32);
+                    headGroup.add(eye);
+                });
+
+                lion.add(headGroup);
+
+                // 4 Pivoted Legs for running animation
+                const legs = [];
+                [[-0.32, 0.65], [0.32, 0.65], [-0.32, -0.65], [0.32, -0.65]].forEach(([lx, lz]) => {
+                    const legPivot = new THREE.Group();
+                    legPivot.position.set(lx, 0.68, lz);
+                    const legMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.68, 0.26), furMat);
+                    legMesh.position.y = -0.34;
+                    legMesh.castShadow = true;
+                    legPivot.add(legMesh);
+                    lion.add(legPivot);
+                    legs.push(legPivot);
+                });
+
+                // Swishing Tail with dark tuft
+                const tailGroup = new THREE.Group();
+                tailGroup.position.set(0, 1.05, -0.92);
+                const tail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 1.05), furMat);
+                tail.position.z = -0.52;
+                const tuft = new THREE.Mesh(new THREE.DodecahedronGeometry(0.16, 0), maneMat);
+                tuft.position.z = -1.05;
+                tailGroup.add(tail, tuft);
+                lion.add(tailGroup);
+
+                lion.scale.setScalar(1.25);
+                const startY = getTerrainHeight(zone.x, zone.z);
+                lion.position.set(zone.x, startY, zone.z);
+                scene.add(lion);
+
+                lions.push({
+                    group: lion,
+                    legs,
+                    tailGroup,
+                    headGroup,
+                    homeX: zone.x,
+                    homeZ: zone.z,
+                    patrolPhase: idx * 1.7,
+                    yaw: 0,
+                    chasing: false,
+                    hp: 4,
+                    maxHp: 4
+                });
+            });
+        }
+
+        /**
+         * Updates mountain lion patrolling, hunting AI, running animation, and player attack logic.
+         */
+        function updateLions(elapsed, dt) {
+            if (lionCooldown > 0) lionCooldown -= dt;
+
+            lions.forEach(l => {
+                if (l.defeated) return;
+                const distToPlayer = Math.hypot(player.pos.x - l.group.position.x, player.pos.z - l.group.position.z);
+                const playerOnLand = !player.inWater && player.pos.y <= getTerrainHeight(player.pos.x, player.pos.z) + 3.0;
+                l.chasing = playerOnLand && distToPlayer < 28.0 && lionCooldown <= 0;
+
+                let targetX, targetZ, moveSpeed;
+                if (l.chasing) {
+                    targetX = player.pos.x;
+                    targetZ = player.pos.z;
+                    moveSpeed = 8.4;
+                } else {
+                    targetX = l.homeX + Math.cos(elapsed * 0.35 + l.patrolPhase) * 14.0;
+                    targetZ = l.homeZ + Math.sin(elapsed * 0.28 + l.patrolPhase) * 14.0;
+                    moveSpeed = 3.2;
+                }
+
+                const dx = targetX - l.group.position.x;
+                const dz = targetZ - l.group.position.z;
+                const stepDist = Math.hypot(dx, dz);
+
+                if (stepDist > 0.2) {
+                    const desiredYaw = Math.atan2(dx, dz);
+                    let yawDiff = desiredYaw - l.yaw;
+                    while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+                    while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+                    l.yaw += yawDiff * Math.min(1, (l.chasing ? 7.0 : 3.0) * dt);
+
+                    const nextX = l.group.position.x + Math.sin(l.yaw) * moveSpeed * dt;
+                    const nextZ = l.group.position.z + Math.cos(l.yaw) * moveSpeed * dt;
+
+                    // Keep lions out of deep river water
+                    if (Math.abs(nextX - getRiverCenterX(nextZ)) > 13.0) {
+                        l.group.position.x = nextX;
+                        l.group.position.z = nextZ;
+                    }
+                }
+
+                l.group.position.y = getTerrainHeight(l.group.position.x, l.group.position.z);
+                l.group.rotation.y = l.yaw;
+
+                // Galloping leg & tail animation
+                const strideRate = l.chasing ? 14.0 : 6.0;
+                const strideAmp = l.chasing ? 0.65 : 0.35;
+                const swing = Math.sin(elapsed * strideRate + l.patrolPhase) * strideAmp;
+                l.legs[0].rotation.x = swing;
+                l.legs[1].rotation.x = -swing;
+                l.legs[2].rotation.x = -swing;
+                l.legs[3].rotation.x = swing;
+                l.tailGroup.rotation.y = Math.sin(elapsed * (strideRate * 0.7) + l.patrolPhase) * 0.45;
+                l.tailGroup.rotation.x = l.chasing ? 0.25 : -0.2;
+
+                // Attack player if within pounce range!
+                if (l.chasing && distToPlayer < 2.1 && lionCooldown <= 0) {
+                    lionCooldown = 3.0;
+                    const t = I18N[currentLang];
+                    spawnDiscoveryBurst(player.pos);
+                    showDiscoveryToast(t.toastLionTitle, t.toastLionSub);
+
+                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
+                    player.vel.set(0, 0, 0);
+                    player.inWater = false;
+                    player.gliding = false;
+                }
+            });
+        }
+
+        /**
+         * Spawns spooky Night Stalker shadow figures that emerge only at night
+         * and relentlessly hunt the player.
+         */
+        function buildNightStalkers() {
+            const cloakMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.95, flatShading: true });
+            const auraMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, emissive: 0x312e81, emissiveIntensity: 0.35, roughness: 0.8, flatShading: true });
+            const redEyeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+
+            const stalkerZones = [
+                { x: -35, z: 65 },
+                { x: 45, z: 75 },
+                { x: -75, z: 110 },
+                { x: 75, z: -25 },
+                { x: -65, z: -35 },
+                { x: 25, z: -75 }
+            ];
+
+            stalkerZones.forEach((zone, idx) => {
+                const stalker = new THREE.Group();
+
+                // Tall shadowy cloaked body
+                const cloak = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.72, 2.5, 7), cloakMat);
+                cloak.position.y = 1.25;
+                cloak.castShadow = true;
+                stalker.add(cloak);
+
+                // Hooded head & glowing red eyes
+                const hood = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.95, 6), auraMat);
+                hood.position.y = 2.75;
+                stalker.add(hood);
+
+                [-0.14, 0.14].forEach(ex => {
+                    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.065, 5, 5), redEyeMat);
+                    eye.position.set(ex, 2.58, 0.28);
+                    stalker.add(eye);
+                });
+
+                // Outstretched ghostly claw arms
+                [-0.55, 0.55].forEach((ax, aIdx) => {
+                    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 1.1), cloakMat);
+                    arm.position.set(ax, 1.85, 0.45);
+                    arm.rotation.y = aIdx === 0 ? 0.25 : -0.25;
+                    stalker.add(arm);
+                });
+
+                // Faint eerie red glow around the stalker
+                const eerieLight = new THREE.PointLight(0xef4444, 0.9, 8.0);
+                eerieLight.position.set(0, 2.2, 0.4);
+                stalker.add(eerieLight);
+
+                stalker.position.set(zone.x, getTerrainHeight(zone.x, zone.z), zone.z);
+                stalker.visible = false;
+                scene.add(stalker);
+
+                nightStalkers.push({
+                    group: stalker,
+                    homeX: zone.x,
+                    homeZ: zone.z,
+                    phase: idx * 1.4,
+                    yaw: 0,
+                    hp: 4,
+                    maxHp: 4,
+                    defeated: false
+                });
+            });
+        }
+
+        /**
+         * Updates Night Stalker visibility (active only during Night), hunting AI, and attack logic.
+         */
+        function updateNightStalkers(elapsed, dt) {
+            if (stalkerCooldown > 0) stalkerCooldown -= dt;
+
+            // Night is preset index 2 (scaled dayCycleTime between ~1.7 and ~2.8)
+            const scaled = dayCycleTime * TIME_PRESETS.length;
+            const isNight = scaled >= 1.65 && scaled < 2.85;
+
+            nightStalkers.forEach(s => {
+                if (!isNight) {
+                    s.group.visible = false;
+                    // Reset defeated stalkers when day breaks so they return next night
+                    if (s.defeated) {
+                        s.defeated = false;
+                        s.hp = s.maxHp;
+                        s.group.position.set(s.homeX, getTerrainHeight(s.homeX, s.homeZ), s.homeZ);
+                    }
+                    return;
+                }
+
+                if (s.defeated) {
+                    s.group.visible = false;
+                    return;
+                }
+
+                s.group.visible = true;
+                const distToPlayer = Math.hypot(player.pos.x - s.group.position.x, player.pos.z - s.group.position.z);
+                const chasing = distToPlayer < 45.0 && stalkerCooldown <= 0;
+
+                const targetX = chasing ? player.pos.x : s.homeX + Math.cos(elapsed * 0.4 + s.phase) * 12.0;
+                const targetZ = chasing ? player.pos.z : s.homeZ + Math.sin(elapsed * 0.35 + s.phase) * 12.0;
+                const moveSpeed = chasing ? 6.4 : 2.6;
+
+                const dx = targetX - s.group.position.x;
+                const dz = targetZ - s.group.position.z;
+                const stepDist = Math.hypot(dx, dz);
+
+                if (stepDist > 0.2) {
+                    const desiredYaw = Math.atan2(dx, dz);
+                    let yawDiff = desiredYaw - s.yaw;
+                    while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+                    while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+                    s.yaw += yawDiff * Math.min(1, 5.5 * dt);
+
+                    s.group.position.x += Math.sin(s.yaw) * moveSpeed * dt;
+                    s.group.position.z += Math.cos(s.yaw) * moveSpeed * dt;
+                }
+
+                const groundY = Math.max(WATER_LEVEL, getTerrainHeight(s.group.position.x, s.group.position.z));
+                s.group.position.y = groundY + Math.sin(elapsed * 3.5 + s.phase) * 0.22;
+                s.group.rotation.y = s.yaw;
+
+                // Catch & murder player if within reach at night!
+                if (chasing && distToPlayer < 2.1 && stalkerCooldown <= 0) {
+                    stalkerCooldown = 3.0;
+                    const t = I18N[currentLang];
+                    spawnDiscoveryBurst(player.pos);
+                    showDiscoveryToast(t.toastStalkerTitle, t.toastStalkerSub);
+
+                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
+                    player.vel.set(0, 0, 0);
+                    player.inWater = false;
+                    player.gliding = false;
+                }
+            });
+        }
+
+        /**
+         * Triggers a manual left-click bone strike to defeat nearby attacking crocodiles or lions.
+         */
+        /**
+         * Returns the active weapon's damage and reach based on owned shop weapons or bone.
+         */
+        function getWeaponStats() {
+            const wCfg = WEAPON_CONFIG.find(w => w.id === activeWeapon);
+            const baseReach = wCfg ? wCfg.reach : 5.5;
+            const damage = wCfg ? wCfg.damage : 1;
+            return { damage, reach: baseReach + upgrades.boneReach * 2.5 };
+        }
+
+        /**
+         * Triggers a manual left-click strike using the active weapon (bone or shop weapon).
+         */
+        function useBoneAttack() {
+            if (!activeWeapon && !hasBone) return;
+            boneSwingTimer = 0.32;
+            const { damage, reach } = getWeaponStats();
+            const t = I18N[currentLang];
+
+            const hitEnemy = (enemy, defeatTitle) => {
+                if (enemy.defeated) return;
+                const dx = enemy.group.position.x - player.pos.x;
+                const dz = enemy.group.position.z - player.pos.z;
+                const dist = Math.hypot(dx, dz);
+                if (dist < reach) {
+                    enemy.hp -= damage;
+                    if (dist > 0.01) {
+                        enemy.group.position.x += (dx / dist) * 2.2;
+                        enemy.group.position.z += (dz / dist) * 2.2;
+                    }
+                    spawnDiscoveryBurst(enemy.group.position);
+                    playDiscoveryChime();
+                    if (enemy.hp <= 0) {
+                        enemy.defeated = true;
+                        enemy.group.visible = false;
+                        addEmeralds(5);
+                        showDiscoveryToast(defeatTitle, '+5 💎');
+                    } else {
+                        showDiscoveryToast(`${t.shopHit} (${enemy.hp}/${enemy.maxHp} HP)`, '');
+                    }
+                }
+            };
+
+            crocodiles.forEach(c => hitEnemy(c, t.toastDefeatedCroc));
+            lions.forEach(l => hitEnemy(l, t.toastDefeatedLion));
+            nightStalkers.forEach(s => {
+                if (s.group.visible) hitEnemy(s, t.toastDefeatedStalker);
+            });
+        }
+
+        /**
          * Populates the tropical valley, riverbanks, and mountain slopes with swaying palms,
          * rainforest canopy trees, lush fern clusters, and mossy boulders.
          */
@@ -1332,16 +2354,18 @@
             const fernMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.75, flatShading: true });
             const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9, flatShading: true });
 
-            for (let i = 0; i < 600; i++) {
+            for (let i = 0; i < 1100; i++) {
                 const rx = (hash2D(i * 3.1, 1.7) - 0.5) * (WORLD_SIZE * 0.82);
                 const rz = (hash2D(2.3, i * 4.7) - 0.5) * (WORLD_SIZE * 0.82);
                 const ry = getTerrainHeight(rx, rz);
                 const slope = getTerrainSlope(rx, rz);
 
-                // Keep river channel, base camp, respawn house, and bridge deck clear
+                // Keep river channel, base camp, respawn house, deciduous forest, and bridge deck clear
                 if (ry < WATER_LEVEL + 0.6 || slope > 0.78) continue;
                 if (Math.hypot(rx - 16, rz - 53) < 9.5) continue;
                 if (Math.hypot(rx - HOUSE_POS.x, rz - HOUSE_POS.z) < 12.0) continue;
+                if (Math.hypot(rx - VILLAGE_POS.x, rz - VILLAGE_POS.z) < 36.0) continue;
+                if (Math.hypot(rx - FOREST_POS.x, rz - FOREST_POS.z) < FOREST_POS.radius) continue;
                 if (Math.abs(rx - getRiverCenterX(40)) < 19 && Math.abs(rz - 40) < 4.5) continue;
 
                 const variant = hash2D(i * 7.3, i * 2.9);
@@ -1436,6 +2460,596 @@
                     scene.add(boulder);
                 }
             }
+        }
+
+        /**
+         * Creates a stylized 3D ancient bone mesh for treasure chamber pickup & player weapon.
+         */
+        function createBoneMesh() {
+            const boneGroup = new THREE.Group();
+            const boneMat = new THREE.MeshStandardMaterial({
+                color: 0xfef9c3,
+                emissive: 0xfde047,
+                emissiveIntensity: 0.4,
+                roughness: 0.35,
+                flatShading: true
+            });
+            const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.1, 8), boneMat);
+            shaft.rotation.z = Math.PI / 2;
+            boneGroup.add(shaft);
+            [-0.55, 0.55].forEach(bx => {
+                [-0.12, 0.12].forEach(by => {
+                    const knob = new THREE.Mesh(new THREE.SphereGeometry(0.2, 7, 7), boneMat);
+                    knob.position.set(bx, by, 0);
+                    boneGroup.add(knob);
+                });
+            });
+            return boneGroup;
+        }
+
+        /**
+         * Builds a dense deciduous forest (Laubwald) with broadleaf trees, fallen leaf mounds,
+         * and two hidden underground caves concealed beneath thick overlapping foliage.
+         */
+        function buildDeciduousForestAndCaves() {
+            const barkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.92, flatShading: true });
+            const leafMats = [
+                new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.8, flatShading: true }),
+                new THREE.MeshStandardMaterial({ color: 0x65a30d, roughness: 0.78, flatShading: true }),
+                new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.82, flatShading: true }),
+                new THREE.MeshStandardMaterial({ color: 0x84cc16, roughness: 0.76, flatShading: true }),
+                new THREE.MeshStandardMaterial({ color: 0xa16207, roughness: 0.85, flatShading: true })
+            ];
+            const bushMat = new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.85, flatShading: true });
+            const caveRockMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.94, flatShading: true });
+            const mushroomMat = new THREE.MeshBasicMaterial({ color: 0x2dd4bf });
+
+            // 1. Broadleaf deciduous trees & forest floor leaf mounds
+            for (let i = 0; i < 165; i++) {
+                const angle = hash2D(i * 4.3, 9.1) * Math.PI * 2;
+                const dist = Math.sqrt(hash2D(7.7, i * 2.1)) * (FOREST_POS.radius - 4);
+                const tx = FOREST_POS.x + Math.cos(angle) * dist;
+                const tz = FOREST_POS.z + Math.sin(angle) * dist;
+
+                // Keep cave interiors & immediate entrance ramps clear of tree trunks
+                let nearCave = false;
+                for (let c = 0; c < HIDDEN_CAVES.length; c++) {
+                    if (Math.hypot(tx - HIDDEN_CAVES[c].x, tz - HIDDEN_CAVES[c].z) < 9.5) {
+                        nearCave = true;
+                        break;
+                    }
+                }
+                if (nearCave) continue;
+
+                const ty = getTerrainHeight(tx, tz);
+                const slope = getTerrainSlope(tx, tz);
+                if (ty < WATER_LEVEL + 1.0 || slope > 0.85) continue;
+
+                const tree = new THREE.Group();
+                const h = 4.2 + hash2D(i, 31) * 3.8;
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.44, h, 7), barkMat);
+                trunk.position.y = h / 2;
+                trunk.rotation.z = (hash2D(i, 33) - 0.5) * 0.14;
+                trunk.castShadow = true;
+                trunk.receiveShadow = true;
+                tree.add(trunk);
+
+                const crown = new THREE.Group();
+                crown.position.y = h;
+                const mat = leafMats[Math.floor(hash2D(i, 37) * leafMats.length)];
+                const clusterCount = 4 + Math.floor(hash2D(i, 41) * 3);
+                for (let k = 0; k < clusterCount; k++) {
+                    const ca = (k / clusterCount) * Math.PI * 2 + hash2D(i, k);
+                    const cr = 1.6 + hash2D(i + k, 43) * 1.1;
+                    const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(cr, 1), mat);
+                    puff.position.set(
+                        Math.cos(ca) * (0.7 + hash2D(k, i) * 0.9),
+                        (k % 2) * 0.85 + 0.3,
+                        Math.sin(ca) * (0.7 + hash2D(i, k + 5) * 0.9)
+                    );
+                    puff.scale.y = 0.78;
+                    puff.castShadow = true;
+                    puff.receiveShadow = true;
+                    crown.add(puff);
+                }
+                tree.add(crown);
+                tree.position.set(tx, ty - 0.15, tz);
+                scene.add(tree);
+
+                swayingFoliage.push({
+                    mesh: crown,
+                    phase: hash2D(i, 47) * Math.PI * 2,
+                    amp: 0.025 + hash2D(i, 51) * 0.02
+                });
+
+                // Scattered fallen leaf mounds & low shrubs on the forest floor
+                if (hash2D(i, 53) < 0.65) {
+                    const mound = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(0.9 + hash2D(i, 57) * 0.9, 0),
+                        leafMats[Math.floor(hash2D(i, 59) * leafMats.length)]
+                    );
+                    mound.scale.set(1.5, 0.38, 1.3);
+                    mound.position.set(
+                        tx + (hash2D(i, 61) - 0.5) * 4.5,
+                        ty + 0.08,
+                        tz + (hash2D(i, 63) - 0.5) * 4.5
+                    );
+                    mound.receiveShadow = true;
+                    scene.add(mound);
+                }
+            }
+
+            // 2. Two longer, deeper hidden caves concealed beneath thick forest foliage
+            HIDDEN_CAVES.forEach((cave, idx) => {
+                const floorY = getTerrainHeight(cave.x, cave.z - 3.0);
+                const rimY = floorY + 7.2; // Natural surrounding ground level
+                const caveGroup = new THREE.Group();
+                caveGroup.position.set(cave.x, 0, cave.z);
+
+                // Dark rocky cave walls flanking the front chamber (leaving -Z open for the deep corridor)
+                [-1, 1].forEach(side => {
+                    for (let w = 0; w < 4; w++) {
+                        const wz = 2.5 - w * 2.8;
+                        const wx = side * (4.8 + (w % 2) * 0.5);
+                        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(2.4, 0), caveRockMat);
+                        rock.position.set(wx, floorY + 2.8, wz);
+                        rock.scale.set(1.2, 1.75, 1.3);
+                        rock.rotation.set(w * 0.7, side * 0.9, 0);
+                        rock.castShadow = true;
+                        rock.receiveShadow = true;
+                        caveGroup.add(rock);
+                    }
+                });
+
+                // Deep walkable underground corridor (-Z = -5 down to -36) with walls, ceiling & glowing markers
+                for (let tz = -5; tz >= -36; tz -= 3.1) {
+                    const cxLocal = Math.sin((tz + 4.0) * 0.13) * 2.2;
+                    const tFloorY = getTerrainHeight(cave.x + cxLocal, cave.z + tz);
+                    const isEndGrotto = tz <= -31;
+                    const wallOffset = isEndGrotto ? 5.2 : 3.6;
+
+                    // Left & right corridor rock walls (leave -X side open at the end of Cave 2 for the secret passage)
+                    [-1, 1].forEach(side => {
+                        if (idx === 1 && side === -1 && tz <= -31) return;
+                        const wallRock = new THREE.Mesh(new THREE.DodecahedronGeometry(2.1, 0), caveRockMat);
+                        wallRock.position.set(cxLocal + side * wallOffset, tFloorY + 2.2, tz);
+                        wallRock.scale.set(1.1, 1.65, 1.45);
+                        wallRock.rotation.set(tz * 0.2, side * 0.8, 0);
+                        wallRock.receiveShadow = true;
+                        caveGroup.add(wallRock);
+                    });
+
+                    // Underground rock ceiling + surface foliage disguise above
+                    const ceilingSlab = new THREE.Mesh(new THREE.DodecahedronGeometry(2.6, 0), caveRockMat);
+                    ceilingSlab.position.set(cxLocal, tFloorY + 4.9, tz);
+                    ceilingSlab.scale.set(isEndGrotto ? 2.4 : 1.75, 0.65, 1.45);
+                    ceilingSlab.receiveShadow = true;
+                    caveGroup.add(ceilingSlab);
+
+                    const tzSurfaceY = Math.max(
+                        getTerrainHeight(cave.x + cxLocal - 6.5, cave.z + tz),
+                        getTerrainHeight(cave.x + cxLocal + 6.5, cave.z + tz),
+                        rimY
+                    );
+                    const tzSeal = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(4.5, 1),
+                        new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.88, flatShading: true })
+                    );
+                    tzSeal.position.set(cxLocal, tzSurfaceY - 0.15, tz);
+                    tzSeal.scale.set(isEndGrotto ? 2.1 : 1.7, 0.42, 1.5);
+                    tzSeal.receiveShadow = true;
+                    caveGroup.add(tzSeal);
+
+                    const topFoliage = new THREE.Mesh(
+                        new THREE.IcosahedronGeometry(3.2, 1),
+                        leafMats[Math.abs(Math.round(tz) + idx) % leafMats.length]
+                    );
+                    topFoliage.position.set(cxLocal, tzSurfaceY + 0.35, tz);
+                    topFoliage.scale.set(1.5, 0.48, 1.4);
+                    topFoliage.castShadow = true;
+                    topFoliage.receiveShadow = true;
+                    caveGroup.add(topFoliage);
+
+                    // Subtle glowing mushrooms & faint light every few steps so you can see the path
+                    if (Math.abs(Math.round(tz)) % 6 === 1) {
+                        const side = (Math.round(tz) % 2 === 0) ? 1 : -1;
+                        const guideMush = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.34, 6), mushroomMat);
+                        guideMush.position.set(cxLocal + side * 1.9, tFloorY + 0.18, tz);
+                        caveGroup.add(guideMush);
+
+                        const stepLight = new THREE.PointLight(0x2dd4bf, 0.7, 9.5);
+                        stepLight.position.set(cxLocal, tFloorY + 2.0, tz);
+                        caveGroup.add(stepLight);
+                    }
+                }
+
+                // Back wall closing off the deep end grotto
+                const endCenterX = Math.sin((-35.0 + 4.0) * 0.13) * 2.2;
+                const endFloorY = getTerrainHeight(cave.x + endCenterX, cave.z - 35.0);
+                for (let b = -1; b <= 1; b++) {
+                    const backRock = new THREE.Mesh(new THREE.DodecahedronGeometry(2.6, 0), caveRockMat);
+                    backRock.position.set(endCenterX + b * 2.6, endFloorY + 2.4, -38.8);
+                    backRock.scale.set(1.25, 1.6, 1.2);
+                    caveGroup.add(backRock);
+                }
+                const endGlow = new THREE.PointLight(0x34d399, 1.35, 13.0);
+                endGlow.position.set(endCenterX, endFloorY + 2.2, -34.5);
+                caveGroup.add(endGlow);
+
+                // Secret deeper passage & Treasure Chamber branching off Cave 2's end grotto into the mountain
+                if (idx === 1) {
+                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xca8a04, emissiveIntensity: 0.35, metalness: 0.78, roughness: 0.25, flatShading: true });
+                    const chestWoodMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.85, flatShading: true });
+                    const gemColors = [0x10b981, 0xf43f5e, 0x38bdf8, 0xa855f7];
+
+                    // Subtle moss veil partially hiding the narrow secret crack at the end of Cave 2
+                    const secretVeil = new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, 0), bushMat);
+                    secretVeil.position.set(endCenterX - 3.1, endFloorY + 2.4, -35.0);
+                    secretVeil.scale.set(0.6, 1.1, 1.3);
+                    caveGroup.add(secretVeil);
+
+                    // Secret passage winding deeper into the mountain (-X)
+                    for (let sx = -3; sx >= -27; sx -= 3.0) {
+                        const szLocal = -35.0 + Math.sin(sx * 0.22) * 2.0;
+                        const sFloorY = getTerrainHeight(cave.x + sx, cave.z + szLocal);
+
+                        [-1, 1].forEach(zSide => {
+                            const sWall = new THREE.Mesh(new THREE.DodecahedronGeometry(2.0, 0), caveRockMat);
+                            sWall.position.set(sx, sFloorY + 2.1, szLocal + zSide * 3.1);
+                            sWall.scale.set(1.35, 1.6, 1.1);
+                            sWall.receiveShadow = true;
+                            caveGroup.add(sWall);
+                        });
+
+                        const sCeil = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5, 0), caveRockMat);
+                        sCeil.position.set(sx, sFloorY + 4.8, szLocal);
+                        sCeil.scale.set(1.4, 0.65, 1.65);
+                        caveGroup.add(sCeil);
+
+                        const sSurfaceY = Math.max(
+                            getTerrainHeight(cave.x + sx, cave.z + szLocal - 6.5),
+                            getTerrainHeight(cave.x + sx, cave.z + szLocal + 6.5),
+                            rimY
+                        );
+                        const sSeal = new THREE.Mesh(
+                            new THREE.DodecahedronGeometry(4.5, 1),
+                            new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.88, flatShading: true })
+                        );
+                        sSeal.position.set(sx, sSurfaceY - 0.15, szLocal);
+                        sSeal.scale.set(1.5, 0.42, 1.7);
+                        sSeal.receiveShadow = true;
+                        caveGroup.add(sSeal);
+
+                        const sCover = new THREE.Mesh(new THREE.IcosahedronGeometry(3.2, 1), leafMats[Math.abs(sx) % leafMats.length]);
+                        sCover.position.set(sx, sSurfaceY + 0.35, szLocal);
+                        sCover.scale.set(1.4, 0.45, 1.5);
+                        caveGroup.add(sCover);
+
+                        if (Math.abs(sx) % 6 === 3) {
+                            const sLight = new THREE.PointLight(0xfbbf24, 0.75, 9.5);
+                            sLight.position.set(sx, sFloorY + 2.1, szLocal);
+                            caveGroup.add(sLight);
+                        }
+                    }
+
+                    // Vaulted Treasure Chamber at (-32, -35)
+                    const tcX = -32.0;
+                    const tcZ = -35.0;
+                    const tcFloorY = getTerrainHeight(cave.x + tcX, cave.z + tcZ);
+
+                    for (let w = 0; w < 10; w++) {
+                        const ang = Math.PI * 0.18 + (w / 9) * Math.PI * 1.64; // Leave +X entrance open
+                        const rx = tcX - Math.cos(ang) * 6.4;
+                        const rz = tcZ + Math.sin(ang) * 6.4;
+                        const tcWall = new THREE.Mesh(new THREE.DodecahedronGeometry(2.6, 0), caveRockMat);
+                        tcWall.position.set(rx, tcFloorY + 3.0, rz);
+                        tcWall.scale.set(1.25, 1.9, 1.25);
+                        tcWall.rotation.y = ang;
+                        caveGroup.add(tcWall);
+                    }
+
+                    const tcRoof = new THREE.Mesh(new THREE.DodecahedronGeometry(6.8, 1), caveRockMat);
+                    tcRoof.position.set(tcX, tcFloorY + 6.4, tcZ);
+                    tcRoof.scale.set(1.2, 0.42, 1.2);
+                    caveGroup.add(tcRoof);
+
+                    // Solid surface-level rock & foliage cap so the chamber is completely invisible from above
+                    const tcSurfaceY = Math.max(
+                        getTerrainHeight(cave.x + tcX - 10, cave.z + tcZ),
+                        getTerrainHeight(cave.x + tcX + 10, cave.z + tcZ),
+                        getTerrainHeight(cave.x + tcX, cave.z + tcZ - 10),
+                        rimY
+                    );
+                    const tcSurfaceRock = new THREE.Mesh(new THREE.DodecahedronGeometry(10.5, 1), caveRockMat);
+                    tcSurfaceRock.position.set(tcX, tcSurfaceY - 0.8, tcZ);
+                    tcSurfaceRock.scale.set(1.15, 0.38, 1.15);
+                    tcSurfaceRock.receiveShadow = true;
+                    caveGroup.add(tcSurfaceRock);
+
+                    const tcTopFoliage = new THREE.Mesh(new THREE.IcosahedronGeometry(10.2, 1), leafMats[0]);
+                    tcTopFoliage.position.set(tcX, tcSurfaceY + 0.3, tcZ);
+                    tcTopFoliage.scale.set(1.15, 0.35, 1.15);
+                    tcTopFoliage.castShadow = true;
+                    tcTopFoliage.receiveShadow = true;
+                    caveGroup.add(tcTopFoliage);
+
+                    // 3 Ornate Treasure Chests
+                    [
+                        [tcX - 2.4, tcZ - 2.0, 0.55],
+                        [tcX - 3.2, tcZ + 0.6, 1.4],
+                        [tcX - 1.6, tcZ + 2.8, 2.3]
+                    ].forEach(([cx, cz, ry]) => {
+                        const chest = new THREE.Group();
+                        chest.position.set(cx, tcFloorY + 0.45, cz);
+                        chest.rotation.y = ry;
+
+                        const base = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 1.0), chestWoodMat);
+                        chest.add(base);
+                        const trim = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.16, 1.06), goldMat);
+                        trim.position.y = 0.22;
+                        chest.add(trim);
+                        const goldHeap = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.45, 6), goldMat);
+                        goldHeap.position.y = 0.5;
+                        chest.add(goldHeap);
+                        const lid = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.25, 1.02), chestWoodMat);
+                        lid.position.set(0, 0.68, -0.38);
+                        lid.rotation.x = -0.65;
+                        chest.add(lid);
+
+                        caveGroup.add(chest);
+                    });
+
+                    // Gold Coin Mounds & Sparkling Gems
+                    for (let g = 0; g < 8; g++) {
+                        const ga = (g / 8) * Math.PI * 2;
+                        const gr = 1.4 + (g % 3) * 1.1;
+                        const coinPile = new THREE.Mesh(new THREE.ConeGeometry(0.65 + (g % 2) * 0.3, 0.48, 7), goldMat);
+                        coinPile.position.set(tcX + Math.cos(ga) * gr, tcFloorY + 0.22, tcZ + Math.sin(ga) * gr);
+                        caveGroup.add(coinPile);
+
+                        const gemMat = new THREE.MeshStandardMaterial({
+                            color: gemColors[g % gemColors.length],
+                            emissive: gemColors[g % gemColors.length],
+                            emissiveIntensity: 0.75,
+                            roughness: 0.15,
+                            flatShading: true
+                        });
+                        const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), gemMat);
+                        gem.position.set(tcX + Math.cos(ga + 0.3) * (gr + 0.4), tcFloorY + 0.55, tcZ + Math.sin(ga + 0.3) * (gr + 0.4));
+                        caveGroup.add(gem);
+                    }
+
+                    // Warm golden treasure lighting
+                    const treasureLight1 = new THREE.PointLight(0xfbbf24, 2.8, 18.0);
+                    treasureLight1.position.set(tcX - 1.0, tcFloorY + 3.2, tcZ);
+                    caveGroup.add(treasureLight1);
+
+                    const treasureLight2 = new THREE.PointLight(0xf59e0b, 1.8, 14.0);
+                    treasureLight2.position.set(tcX + 2.0, tcFloorY + 2.5, tcZ + 1.5);
+                    caveGroup.add(treasureLight2);
+
+                    const caveBone = createBoneMesh();
+                    caveBone.position.set(tcX, tcFloorY + 1.35, tcZ);
+                    caveBone.userData.baseY = tcFloorY + 1.35;
+                    caveGroup.add(caveBone);
+                    bonePickups.push(caveBone);
+                }
+
+                // Thick, low-hanging foliage canopy & leaf mounds hiding the elongated cave from above
+                for (let f = 0; f < 24; f++) {
+                    const fa = (f / 24) * Math.PI * 2;
+                    const fr = (f % 3) * 2.1 + 0.6;
+                    const fx = Math.cos(fa) * fr;
+                    const fz = Math.sin(fa) * (fr * 1.45) - 2.6;
+                    const canopyMat = leafMats[(f + idx) % leafMats.length];
+                    const leafRoof = new THREE.Mesh(new THREE.IcosahedronGeometry(2.5 + (f % 2) * 0.75, 1), canopyMat);
+                    leafRoof.position.set(fx, rimY - 0.4 + (f % 3) * 0.35, fz);
+                    leafRoof.scale.set(1.35, 0.58, 1.45);
+                    leafRoof.castShadow = true;
+                    leafRoof.receiveShadow = true;
+                    caveGroup.add(leafRoof);
+                }
+
+                // Tucked-in camouflaging bushes narrowing & hiding the +Z entrance
+                [-2.05, 2.05].forEach((bx, bIdx) => {
+                    const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(2.25, 1), bushMat);
+                    bush.position.set(bx, rimY - 1.5, 4.9 + bIdx * 0.35);
+                    bush.scale.set(1.25, 0.95, 1.35);
+                    bush.castShadow = true;
+                    caveGroup.add(bush);
+                });
+
+                // Low-hanging leaf veil & extra concealing bush tucked right in front of the entrance
+                [-0.95, 0, 0.95].forEach((lx, lIdx) => {
+                    const veil = new THREE.Mesh(new THREE.IcosahedronGeometry(1.25, 0), leafMats[(lIdx + 1) % leafMats.length]);
+                    veil.position.set(lx, rimY - 1.35, 4.6);
+                    veil.scale.set(1.15, 0.75, 1.0);
+                    caveGroup.add(veil);
+                });
+                const frontCover = new THREE.Mesh(new THREE.IcosahedronGeometry(1.55, 1), bushMat);
+                frontCover.position.set(idx === 0 ? 0.65 : -0.65, rimY - 1.85, 6.4);
+                frontCover.scale.set(1.25, 0.72, 1.1);
+                frontCover.castShadow = true;
+                caveGroup.add(frontCover);
+
+                // Subtle bioluminescent mushrooms deep inside the cave (only visible once inside)
+                for (let m = 0; m < 6; m++) {
+                    const ma = m * 1.15 + idx;
+                    const mush = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.36, 6), mushroomMat);
+                    mush.position.set(Math.cos(ma) * 2.2, floorY + 0.18, Math.sin(ma) * 4.2 - 3.6);
+                    caveGroup.add(mush);
+                }
+
+                const caveGlow = new THREE.PointLight(0x2dd4bf, 0.85, 8.5);
+                caveGlow.position.set(0, floorY + 1.5, -3.5);
+                caveGroup.add(caveGlow);
+
+                scene.add(caveGroup);
+            });
+
+            // 3. New Secret Passage under the foliage leading deep into the mountain to a Treasure Chamber
+            const spGroup = new THREE.Group();
+            const spEntryY = getTerrainHeight(SECRET_PASSAGE_POS.x, SECRET_PASSAGE_POS.z + 4.0);
+
+            // Concealing foliage bushes & hanging leaves hiding the secret entrance at (-128, 78)
+            [-1.9, 1.9].forEach((bx, bIdx) => {
+                const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(2.15, 1), bushMat);
+                bush.position.set(SECRET_PASSAGE_POS.x + bx, spEntryY + 1.1, SECRET_PASSAGE_POS.z + 1.5 + bIdx * 0.3);
+                bush.scale.set(1.25, 0.95, 1.35);
+                bush.castShadow = true;
+                spGroup.add(bush);
+            });
+            [-0.9, 0, 0.9].forEach((lx, lIdx) => {
+                const veil = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 0), leafMats[lIdx % leafMats.length]);
+                veil.position.set(SECRET_PASSAGE_POS.x + lx, spEntryY + 1.85, SECRET_PASSAGE_POS.z + 1.2);
+                veil.scale.set(1.2, 0.7, 1.0);
+                spGroup.add(veil);
+            });
+            const spFrontCover = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 1), bushMat);
+            spFrontCover.position.set(SECRET_PASSAGE_POS.x + 0.55, spEntryY + 0.65, SECRET_PASSAGE_POS.z + 3.2);
+            spFrontCover.scale.set(1.25, 0.7, 1.1);
+            spFrontCover.castShadow = true;
+            spGroup.add(spFrontCover);
+
+            // Underground tunnel walls & rock ceiling running north (-Z) deep into the mountain
+            for (let sz = SECRET_PASSAGE_POS.z; sz >= MOUNTAIN_TREASURE.z + 4; sz -= 3.2) {
+                const sxCenter = SECRET_PASSAGE_POS.x + Math.sin((sz - SECRET_PASSAGE_POS.z) * 0.1) * 3.5;
+                const sFloorY = getTerrainHeight(sxCenter, sz);
+
+                [-1, 1].forEach(side => {
+                    const wall = new THREE.Mesh(new THREE.DodecahedronGeometry(2.0, 0), caveRockMat);
+                    wall.position.set(sxCenter + side * 3.2, sFloorY + 2.1, sz);
+                    wall.scale.set(1.1, 1.65, 1.45);
+                    wall.receiveShadow = true;
+                    spGroup.add(wall);
+                });
+
+                const ceil = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5, 0), caveRockMat);
+                ceil.position.set(sxCenter, sFloorY + 4.7, sz);
+                ceil.scale.set(1.75, 0.65, 1.45);
+                spGroup.add(ceil);
+
+                // Seal the top at mountain surface level so neither the tunnel nor the chamber is visible from above
+                const rimSurfaceY = Math.max(
+                    getTerrainHeight(sxCenter - 6.5, sz),
+                    getTerrainHeight(sxCenter + 6.5, sz)
+                );
+                if (sz > 64) {
+                    const topLeaf = new THREE.Mesh(new THREE.IcosahedronGeometry(3.8, 1), leafMats[Math.abs(Math.round(sz)) % leafMats.length]);
+                    topLeaf.position.set(sxCenter, rimSurfaceY + 0.35, sz);
+                    topLeaf.scale.set(1.75, 0.45, 1.6);
+                    topLeaf.castShadow = true;
+                    topLeaf.receiveShadow = true;
+                    spGroup.add(topLeaf);
+                } else {
+                    const mountainSeal = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(4.8, 1),
+                        new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.88, flatShading: true })
+                    );
+                    mountainSeal.position.set(sxCenter, rimSurfaceY + 0.1, sz);
+                    mountainSeal.scale.set(1.85, 0.45, 1.6);
+                    mountainSeal.receiveShadow = true;
+                    spGroup.add(mountainSeal);
+                }
+
+                if (Math.abs(Math.round(sz)) % 7 === 0) {
+                    const sLight = new THREE.PointLight(0xfbbf24, 0.7, 10.0);
+                    sLight.position.set(sxCenter, sFloorY + 2.2, sz);
+                    spGroup.add(sLight);
+                }
+            }
+
+            // Mountain Treasure Chamber at (-124, 22)
+            const mtFloorY = getTerrainHeight(MOUNTAIN_TREASURE.x, MOUNTAIN_TREASURE.z);
+            const mtGoldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xca8a04, emissiveIntensity: 0.4, metalness: 0.8, roughness: 0.22, flatShading: true });
+            const mtWoodMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.85, flatShading: true });
+            const mtGems = [0x10b981, 0xf43f5e, 0x38bdf8, 0xfacc15];
+
+            for (let w = 0; w < 10; w++) {
+                const ang = Math.PI * 0.18 + (w / 9) * Math.PI * 1.64; // Leave +Z tunnel entrance open
+                const wx = MOUNTAIN_TREASURE.x + Math.sin(ang) * 6.5;
+                const wz = MOUNTAIN_TREASURE.z - Math.cos(ang) * 6.5;
+                const mtWall = new THREE.Mesh(new THREE.DodecahedronGeometry(2.6, 0), caveRockMat);
+                mtWall.position.set(wx, mtFloorY + 3.0, wz);
+                mtWall.scale.set(1.25, 1.9, 1.25);
+                spGroup.add(mtWall);
+            }
+
+            const mtRoof = new THREE.Mesh(new THREE.DodecahedronGeometry(6.8, 1), caveRockMat);
+            mtRoof.position.set(MOUNTAIN_TREASURE.x, mtFloorY + 6.4, MOUNTAIN_TREASURE.z);
+            mtRoof.scale.set(1.25, 0.45, 1.25);
+            spGroup.add(mtRoof);
+
+            // Solid mountain-colored cap at surface level so the Mountain Treasure Chamber cannot be seen from above
+            const mtSurfaceY = Math.max(
+                getTerrainHeight(MOUNTAIN_TREASURE.x - 10.5, MOUNTAIN_TREASURE.z),
+                getTerrainHeight(MOUNTAIN_TREASURE.x + 10.5, MOUNTAIN_TREASURE.z),
+                getTerrainHeight(MOUNTAIN_TREASURE.x, MOUNTAIN_TREASURE.z - 10.5),
+                getTerrainHeight(MOUNTAIN_TREASURE.x, MOUNTAIN_TREASURE.z + 10.5)
+            );
+            const mtMountainCap = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(11.0, 1),
+                new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.88, flatShading: true })
+            );
+            mtMountainCap.position.set(MOUNTAIN_TREASURE.x, mtSurfaceY - 0.2, MOUNTAIN_TREASURE.z);
+            mtMountainCap.scale.set(1.15, 0.36, 1.15);
+            mtMountainCap.castShadow = true;
+            mtMountainCap.receiveShadow = true;
+            spGroup.add(mtMountainCap);
+
+            // 3 Treasure Chests + Gold Piles + Gems inside the Mountain Chamber
+            [
+                [MOUNTAIN_TREASURE.x - 2.6, MOUNTAIN_TREASURE.z - 2.2, 0.4],
+                [MOUNTAIN_TREASURE.x, MOUNTAIN_TREASURE.z - 3.4, 0.0],
+                [MOUNTAIN_TREASURE.x + 2.6, MOUNTAIN_TREASURE.z - 2.2, -0.4]
+            ].forEach(([cx, cz, ry]) => {
+                const chest = new THREE.Group();
+                chest.position.set(cx, mtFloorY + 0.45, cz);
+                chest.rotation.y = ry;
+                chest.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 1.0), mtWoodMat));
+                const trim = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.16, 1.06), mtGoldMat);
+                trim.position.y = 0.22;
+                chest.add(trim);
+                const goldHeap = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.45, 6), mtGoldMat);
+                goldHeap.position.y = 0.5;
+                chest.add(goldHeap);
+                const lid = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.25, 1.02), mtWoodMat);
+                lid.position.set(0, 0.68, -0.38);
+                lid.rotation.x = -0.65;
+                chest.add(lid);
+                spGroup.add(chest);
+            });
+
+            for (let g = 0; g < 8; g++) {
+                const ga = (g / 8) * Math.PI * 2;
+                const gr = 1.5 + (g % 3) * 1.1;
+                const coin = new THREE.Mesh(new THREE.ConeGeometry(0.65 + (g % 2) * 0.28, 0.48, 7), mtGoldMat);
+                coin.position.set(MOUNTAIN_TREASURE.x + Math.cos(ga) * gr, mtFloorY + 0.22, MOUNTAIN_TREASURE.z + Math.sin(ga) * gr);
+                spGroup.add(coin);
+
+                const gemMat = new THREE.MeshStandardMaterial({
+                    color: mtGems[g % mtGems.length],
+                    emissive: mtGems[g % mtGems.length],
+                    emissiveIntensity: 0.78,
+                    roughness: 0.15,
+                    flatShading: true
+                });
+                const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), gemMat);
+                gem.position.set(MOUNTAIN_TREASURE.x + Math.cos(ga + 0.3) * (gr + 0.4), mtFloorY + 0.55, MOUNTAIN_TREASURE.z + Math.sin(ga + 0.3) * (gr + 0.4));
+                spGroup.add(gem);
+            }
+
+            const mtLight = new THREE.PointLight(0xfbbf24, 3.0, 20.0);
+            mtLight.position.set(MOUNTAIN_TREASURE.x, mtFloorY + 3.4, MOUNTAIN_TREASURE.z);
+            spGroup.add(mtLight);
+
+            const mtBone = createBoneMesh();
+            mtBone.position.set(MOUNTAIN_TREASURE.x, mtFloorY + 1.35, MOUNTAIN_TREASURE.z);
+            mtBone.userData.baseY = mtFloorY + 1.35;
+            spGroup.add(mtBone);
+            bonePickups.push(mtBone);
+
+            scene.add(spGroup);
         }
 
         /**
@@ -1639,6 +3253,13 @@
             rightArm.position.set(0.52, 1.38, 0);
             rightArm.castShadow = true;
 
+            playerBoneMesh = createBoneMesh();
+            playerBoneMesh.scale.setScalar(0.58);
+            playerBoneMesh.position.set(0, -0.36, -0.35);
+            playerBoneMesh.rotation.y = Math.PI / 2;
+            playerBoneMesh.visible = false;
+            rightArm.add(playerBoneMesh);
+
             playerGroup.add(leftLeg, rightLeg, leftArm, rightArm);
 
             // Swimming Water Ripple Ring
@@ -1680,6 +3301,390 @@
             playerGroup.add(gliderMesh);
 
             scene.add(playerGroup);
+        }
+
+        /**
+         * Updates the player's emerald balance in the HUD and Shop modal.
+         */
+        function addEmeralds(amount) {
+            emeralds += amount;
+            const hudEl = document.getElementById('emerald-count');
+            const shopEl = document.getElementById('shop-emerald-count');
+            if (hudEl) hudEl.textContent = emeralds;
+            if (shopEl) shopEl.textContent = emeralds;
+            if (!document.getElementById('shop-modal').classList.contains('hidden')) {
+                renderShop();
+            }
+        }
+
+        /**
+         * Renders the interactive Emerald Shop upgrade cards in the active language.
+         */
+        function renderShop() {
+            const t = I18N[currentLang];
+            document.getElementById('shop-title').textContent = t.shopTitle;
+            document.getElementById('shop-balance-label').textContent = t.shopBalanceLabel;
+            document.getElementById('shop-emerald-count').textContent = emeralds;
+            const container = document.getElementById('shop-items');
+            container.innerHTML = '';
+
+            UPGRADE_CONFIG.forEach(cfg => {
+                const lvl = upgrades[cfg.id];
+                const maxed = lvl >= cfg.max;
+                const cost = maxed ? 0 : cfg.costs[lvl];
+                const canBuy = !maxed && emeralds >= cost;
+                const info = t.shopUpgrades[cfg.id];
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between gap-3 rounded-2xl p-3 bg-emerald-950/60 border border-emerald-400/25';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xl">${cfg.icon}</span>
+                        <div>
+                            <div class="font-bold text-sm text-white">${info.name} <span class="text-xs text-emerald-300 font-semibold ml-1">Lv.${lvl}/${cfg.max}</span></div>
+                            <div class="text-xs text-emerald-200/80">${info.desc}</div>
+                        </div>
+                    </div>
+                    <button class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${maxed ? 'bg-emerald-800/60 text-emerald-300 cursor-default' : canBuy ? 'game-btn text-white cursor-pointer' : 'bg-slate-700/60 text-slate-400 cursor-not-allowed'}" ${!canBuy ? 'disabled' : ''}>
+                        ${maxed ? t.shopMaxed : `${t.shopBuy} (💎 ${cost})`}
+                    </button>
+                `;
+                if (canBuy) {
+                    row.querySelector('button').addEventListener('click', () => {
+                        emeralds -= cost;
+                        upgrades[cfg.id]++;
+                        addEmeralds(0);
+                        playDiscoveryChime();
+                        renderShop();
+                    });
+                }
+                container.appendChild(row);
+            });
+
+            // Expensive Combat Weapons Section
+            WEAPON_CONFIG.forEach(wCfg => {
+                const owned = ownedWeapons[wCfg.id];
+                const canBuy = !owned && emeralds >= wCfg.cost;
+                const info = t.shopWeapons[wCfg.id];
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between gap-3 rounded-2xl p-3 bg-amber-950/50 border border-amber-400/30';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-xl">${wCfg.icon}</span>
+                        <div>
+                            <div class="font-bold text-sm text-amber-100">${info.name}</div>
+                            <div class="text-xs text-amber-200/80">${info.desc}</div>
+                        </div>
+                    </div>
+                    <button class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${owned ? 'bg-amber-800/60 text-amber-200 cursor-default' : canBuy ? 'game-btn text-white cursor-pointer' : 'bg-slate-700/60 text-slate-400 cursor-not-allowed'}" ${!canBuy ? 'disabled' : ''}>
+                        ${owned ? t.shopOwned : `${t.shopBuy} (💎 ${wCfg.cost})`}
+                    </button>
+                `;
+                if (canBuy) {
+                    row.querySelector('button').addEventListener('click', () => {
+                        emeralds -= wCfg.cost;
+                        ownedWeapons[wCfg.id] = true;
+                        activeWeapon = wCfg.id;
+                        if (playerBoneMesh) playerBoneMesh.visible = true;
+                        const badge = document.getElementById('bone-badge');
+                        if (badge) {
+                            badge.textContent = `${wCfg.icon} ${info.name}`;
+                            badge.classList.remove('hidden');
+                        }
+                        selectBuildType(null);
+                        const items = getInventoryItems();
+                        const newIdx = items.findIndex(it => it.kind === 'weapon' && it.id === wCfg.id);
+                        if (newIdx >= 0) activeInventoryIndex = newIdx;
+                        updateBuildHotbar();
+                        addEmeralds(0);
+                        playDiscoveryChime();
+                        renderShop();
+                    });
+                }
+                container.appendChild(row);
+            });
+
+            // Building Parts Section
+            BUILDING_CONFIG.forEach(bCfg => {
+                const count = buildingInventory[bCfg.id];
+                const canBuy = emeralds >= bCfg.cost;
+                const info = t.shopBuildings[bCfg.id];
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between gap-3 rounded-2xl p-3 bg-sky-950/50 border border-sky-400/30';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-xl">${bCfg.icon}</span>
+                        <div>
+                            <div class="font-bold text-sm text-sky-100">${info.name} <span class="text-xs text-sky-300 font-semibold ml-1">(${count})</span></div>
+                            <div class="text-xs text-sky-200/80">${info.desc}</div>
+                        </div>
+                    </div>
+                    <button class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${canBuy ? 'game-btn text-white cursor-pointer' : 'bg-slate-700/60 text-slate-400 cursor-not-allowed'}" ${!canBuy ? 'disabled' : ''}>
+                        ${t.shopBuy} (💎 ${bCfg.cost})
+                    </button>
+                `;
+                if (canBuy) {
+                    row.querySelector('button').addEventListener('click', () => {
+                        emeralds -= bCfg.cost;
+                        buildingInventory[bCfg.id] += bCfg.amount;
+                        if (!selectedBuildType) selectBuildType(bCfg.id);
+                        else updateBuildHotbar();
+                        addEmeralds(0);
+                        playDiscoveryChime();
+                        renderShop();
+                    });
+                }
+                container.appendChild(row);
+            });
+        }
+
+        /**
+         * Creates a 3D mesh (solid or translucent ghost preview) for a buildable part.
+         */
+        function createBuildingMesh(type, isGhost = false) {
+            const cfg = BUILDING_CONFIG.find(b => b.id === type);
+            const [w, h, d] = cfg.size;
+            let mat;
+            if (isGhost) {
+                mat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45, wireframe: false });
+            } else if (type === 'plank') {
+                mat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.85, flatShading: true });
+            } else {
+                mat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9, flatShading: true });
+            }
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+            if (!isGhost) {
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+            }
+            return mesh;
+        }
+
+        /**
+         * Returns the ordered list of currently owned weapons and building materials.
+         */
+        function getInventoryItems() {
+            const items = [];
+            if (ownedWeapons.bone) items.push({ kind: 'weapon', id: 'bone', icon: '🦴', label: I18N[currentLang].boneBadge });
+            WEAPON_CONFIG.forEach(w => {
+                if (ownedWeapons[w.id]) {
+                    items.push({ kind: 'weapon', id: w.id, icon: w.icon, label: `${w.icon} ${I18N[currentLang].shopWeapons[w.id].name}` });
+                }
+            });
+            BUILDING_CONFIG.forEach(b => {
+                if (buildingInventory[b.id] > 0) {
+                    items.push({ kind: 'build', id: b.id, icon: b.icon, count: buildingInventory[b.id] });
+                }
+            });
+            return items;
+        }
+
+        /**
+         * Selects an inventory slot by index, switching active weapon or building preview.
+         */
+        function selectInventoryIndex(idx) {
+            const items = getInventoryItems();
+            if (items.length === 0) {
+                activeInventoryIndex = 0;
+                selectBuildType(null);
+                return;
+            }
+            activeInventoryIndex = ((idx % items.length) + items.length) % items.length;
+            const item = items[activeInventoryIndex];
+
+            if (item.kind === 'weapon') {
+                activeWeapon = item.id;
+                if (playerBoneMesh) playerBoneMesh.visible = true;
+                const badge = document.getElementById('bone-badge');
+                if (badge) {
+                    badge.textContent = item.label;
+                    badge.classList.remove('hidden');
+                }
+                selectBuildType(null);
+            } else {
+                selectBuildType(item.id);
+            }
+        }
+
+        function updateBuildHotbar() {
+            const items = getInventoryItems();
+            const bar = document.getElementById('inventory-hotbar');
+            const slotsEl = document.getElementById('inventory-slots');
+            if (!bar || !slotsEl) return;
+
+            if (items.length === 0) {
+                bar.classList.add('hidden');
+                slotsEl.innerHTML = '';
+                return;
+            }
+            bar.classList.remove('hidden');
+
+            if (activeInventoryIndex >= items.length) activeInventoryIndex = items.length - 1;
+            slotsEl.innerHTML = '';
+
+            items.forEach((item, idx) => {
+                const isSelected = idx === activeInventoryIndex && (
+                    (item.kind === 'build' && selectedBuildType === item.id) ||
+                    (item.kind === 'weapon' && !selectedBuildType && activeWeapon === item.id)
+                );
+                const btn = document.createElement('button');
+                btn.className = `px-2.5 py-1.5 rounded-xl border cursor-pointer flex items-center gap-1 transition ${isSelected ? 'border-amber-300 bg-emerald-600/80 shadow-md scale-105' : 'bg-emerald-950/60 border-emerald-400/30 hover:border-amber-300/60'}`;
+                btn.innerHTML = `<span class="text-[10px] text-emerald-300/80">${idx + 1}</span><span>${item.icon}</span>${item.count ? `<span class="text-sky-200">×${item.count}</span>` : ''}`;
+                btn.addEventListener('click', () => selectInventoryIndex(idx));
+                slotsEl.appendChild(btn);
+            });
+
+            const rotBtn = document.getElementById('build-btn-rotate');
+            const placeBtn = document.getElementById('build-btn-place');
+            if (selectedBuildType) {
+                rotBtn.classList.remove('hidden');
+                placeBtn.classList.remove('hidden');
+            } else {
+                rotBtn.classList.add('hidden');
+                placeBtn.classList.add('hidden');
+            }
+        }
+
+        function selectBuildType(type) {
+            if (selectedBuildType === type) {
+                selectedBuildType = null;
+            } else if (buildingInventory[type] > 0) {
+                selectedBuildType = type;
+            } else {
+                selectedBuildType = null;
+            }
+            if (buildGhost) {
+                scene.remove(buildGhost);
+                buildGhost = null;
+            }
+            if (selectedBuildType) {
+                buildGhost = createBuildingMesh(selectedBuildType, true);
+                scene.add(buildGhost);
+            }
+            updateBuildHotbar();
+        }
+
+        function getBuildTargetPos() {
+            const cfg = BUILDING_CONFIG.find(b => b.id === selectedBuildType);
+            const [, h] = cfg.size;
+            const dist = 4.2;
+            const bx = player.pos.x - Math.sin(camState.yaw) * dist;
+            const bz = player.pos.z - Math.cos(camState.yaw) * dist;
+            const groundY = Math.max(WATER_LEVEL, getTerrainHeight(bx, bz));
+            const structY = getPlacedStructureHeight(bx, bz, player.pos.y + 3.0);
+            const baseY = structY > -Infinity ? Math.max(groundY, structY) : groundY;
+            return { x: bx, y: baseY + h * 0.5, z: bz, baseY };
+        }
+
+        function updateBuildGhost() {
+            if (!buildGhost || !selectedBuildType) return;
+            if (buildingInventory[selectedBuildType] <= 0) {
+                selectBuildType(null);
+                return;
+            }
+            const target = getBuildTargetPos();
+            buildGhost.position.set(target.x, target.y, target.z);
+            buildGhost.rotation.y = buildRotation;
+        }
+
+        function placeBuildingPart() {
+            if (!selectedBuildType || buildingInventory[selectedBuildType] <= 0) return;
+            const cfg = BUILDING_CONFIG.find(b => b.id === selectedBuildType);
+            const [w, h, d] = cfg.size;
+            const target = getBuildTargetPos();
+
+            const mesh = createBuildingMesh(selectedBuildType, false);
+            mesh.position.set(target.x, target.y, target.z);
+            mesh.rotation.y = buildRotation;
+            scene.add(mesh);
+
+            placedStructures.push({
+                x: target.x,
+                z: target.z,
+                topY: target.baseY + h,
+                halfW: w * 0.5,
+                halfD: d * 0.5,
+                rotY: buildRotation
+            });
+
+            buildingInventory[selectedBuildType]--;
+            spawnDiscoveryBurst(mesh.position);
+            playDiscoveryChime();
+
+            if (buildingInventory[selectedBuildType] <= 0) {
+                const nextType = ['wall', 'plank', 'pillar'].find(t => buildingInventory[t] > 0) || null;
+                selectedBuildType = null;
+                if (nextType) selectBuildType(nextType);
+                else selectBuildType(null);
+            } else {
+                updateBuildHotbar();
+            }
+        }
+
+        function getPlacedStructureHeight(x, z, currentY) {
+            let maxTop = -Infinity;
+            for (let i = 0; i < placedStructures.length; i++) {
+                const s = placedStructures[i];
+                const dx = x - s.x;
+                const dz = z - s.z;
+                const cos = Math.cos(-s.rotY);
+                const sin = Math.sin(-s.rotY);
+                const lx = dx * cos - dz * sin;
+                const lz = dx * sin + dz * cos;
+                if (Math.abs(lx) <= s.halfW + 0.35 && Math.abs(lz) <= s.halfD + 0.35) {
+                    if (currentY >= s.topY - 1.25 && s.topY > maxTop) {
+                        maxTop = s.topY;
+                    }
+                }
+            }
+            return maxTop;
+        }
+
+        /**
+         * Opens or closes the in-game Emerald Upgrade Shop modal.
+         */
+        function toggleShop(forceOpen) {
+            const modal = document.getElementById('shop-modal');
+            const isOpen = !modal.classList.contains('hidden');
+            const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+            if (shouldOpen) {
+                renderShop();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        /**
+         * Scatters 24 collectible Emerald Shards across the valley, riverbanks,
+         * Laubwald, and mountain trails so the player can earn extra emeralds.
+         */
+        function buildEmeraldShards() {
+            const shardMat = new THREE.MeshStandardMaterial({
+                color: 0x34d399,
+                emissive: 0x10b981,
+                emissiveIntensity: 0.75,
+                roughness: 0.15,
+                metalness: 0.4,
+                flatShading: true
+            });
+
+            for (let i = 0; i < 48; i++) {
+                const sx = (hash2D(i * 5.7, 3.3) - 0.5) * (WORLD_SIZE * 0.75);
+                const sz = (hash2D(8.1, i * 6.3) - 0.5) * (WORLD_SIZE * 0.75);
+                const sy = Math.max(WATER_LEVEL + 0.8, getTerrainHeight(sx, sz)) + 1.1;
+
+                const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), shardMat);
+                mesh.scale.set(0.85, 1.35, 0.85);
+                mesh.position.set(sx, sy, sz);
+                scene.add(mesh);
+
+                emeraldShards.push({ mesh, baseY: sy, collected: false, phase: i * 0.9 });
+            }
         }
 
         /**
@@ -1820,7 +3825,7 @@
         function spawnDiscoveryBurst(pos) {
             const geo = new THREE.OctahedronGeometry(0.22, 0);
             const mat = new THREE.MeshBasicMaterial({ color: 0x6ee7b7 });
-            for (let i = 0; i < 24; i++) {
+            for (let i = 0; i < 48; i++) {
                 const p = new THREE.Mesh(geo, mat);
                 p.position.copy(pos);
                 const angle = Math.random() * Math.PI * 2;
@@ -1845,6 +3850,7 @@
 
         function applyTimePreset(index) {
             timeOfDayIndex = index % TIME_PRESETS.length;
+            dayCycleTime = timeOfDayIndex / TIME_PRESETS.length;
             const p = TIME_PRESETS[timeOfDayIndex];
 
             scene.background.setHex(p.sky);
@@ -1861,6 +3867,53 @@
 
             document.getElementById('time-icon').textContent = p.icon;
             document.getElementById('time-text').textContent = I18N[currentLang].timeNames[timeOfDayIndex];
+        }
+
+        /**
+         * Smoothly advances the continuous day-night cycle across Noon, Sunset, Night, and Dawn Mist.
+         */
+        function updateDayCycle(dt) {
+            if (inOtherDimension) {
+                scene.background.setHex(0x1a0b2e);
+                scene.fog.color.setHex(0x3b0764);
+                scene.fog.density = 0.0055;
+                sunLight.color.setHex(0xe879f9);
+                sunLight.intensity = 1.1;
+                hemiLight.color.setHex(0xa855f7);
+                hemiLight.groundColor.setHex(0x1e1b4b);
+                hemiLight.intensity = 0.85;
+                return;
+            }
+            dayCycleTime = (dayCycleTime + dt / 120) % 1;
+            const total = TIME_PRESETS.length;
+            const scaled = dayCycleTime * total;
+            const idxA = Math.floor(scaled) % total;
+            const idxB = (idxA + 1) % total;
+            const alpha = scaled - Math.floor(scaled);
+            const a = TIME_PRESETS[idxA];
+            const b = TIME_PRESETS[idxB];
+
+            scene.background.setHex(a.sky).lerp(new THREE.Color(b.sky), alpha);
+            scene.fog.color.setHex(a.fog).lerp(new THREE.Color(b.fog), alpha);
+            scene.fog.density = THREE.MathUtils.lerp(a.fogDensity, b.fogDensity, alpha);
+
+            sunLight.color.setHex(a.sunColor).lerp(new THREE.Color(b.sunColor), alpha);
+            sunLight.intensity = THREE.MathUtils.lerp(a.sunIntensity, b.sunIntensity, alpha);
+            sunLight.position.set(
+                THREE.MathUtils.lerp(a.sunPos[0], b.sunPos[0], alpha),
+                THREE.MathUtils.lerp(a.sunPos[1], b.sunPos[1], alpha),
+                THREE.MathUtils.lerp(a.sunPos[2], b.sunPos[2], alpha)
+            );
+
+            hemiLight.color.setHex(a.hemiSky).lerp(new THREE.Color(b.hemiSky), alpha);
+            hemiLight.groundColor.setHex(a.hemiGround).lerp(new THREE.Color(b.hemiGround), alpha);
+            hemiLight.intensity = THREE.MathUtils.lerp(a.hemiIntensity, b.hemiIntensity, alpha);
+
+            if (idxA !== timeOfDayIndex) {
+                timeOfDayIndex = idxA;
+                document.getElementById('time-icon').textContent = a.icon;
+                document.getElementById('time-text').textContent = I18N[currentLang].timeNames[idxA];
+            }
         }
 
         function updatePlayer(dt) {
@@ -1883,11 +3936,13 @@
                 inputVec.addScaledVector(forward, moveForward).addScaledVector(right, moveRight).normalize();
             }
 
-            // Determine current speed based on terrain/water/gliding state
-            let speed = 11.5;
-            if (isSprinting && !player.inWater) speed = 18.0;
-            if (player.inWater) speed = 8.2;
-            if (player.gliding) speed = 22.0;
+            // Determine current speed based on terrain/water/gliding state + shop upgrades
+            const speedMult = 1 + upgrades.speed * 0.2;
+            const glideMult = 1 + upgrades.glider * 0.2;
+            let speed = 11.5 * speedMult;
+            if (isSprinting && !player.inWater) speed = 18.0 * speedMult;
+            if (player.inWater) speed = 8.2 * speedMult;
+            if (player.gliding) speed = 22.0 * glideMult;
 
             // Smooth horizontal velocity
             const targetVx = inputVec.x * speed;
@@ -1922,14 +3977,16 @@
                     player.inWater = false;
                 }
             } else if (player.gliding) {
-                player.vel.y = Math.max(player.vel.y + GLIDE_GRAVITY * dt, -3.6);
+                const glideGrav = GLIDE_GRAVITY * (1 - upgrades.glider * 0.18);
+                const maxFall = -3.6 * (1 - upgrades.glider * 0.15);
+                player.vel.y = Math.max(player.vel.y + glideGrav * dt, maxFall);
             } else {
                 player.vel.y += GRAVITY * dt;
             }
 
             // Jump from ground
             if (player.onGround && jumpHeld) {
-                player.vel.y = JUMP_VELOCITY;
+                player.vel.y = JUMP_VELOCITY * (1 + upgrades.jump * 0.15);
                 player.onGround = false;
             }
 
@@ -1946,9 +4003,15 @@
             // Ground, Wooden Suspension Bridge & Water collision
             const terrainY = getTerrainHeight(player.pos.x, player.pos.z);
             const bridgeY = getBridgeDeckHeight(player.pos.x, player.pos.z);
-            // Allow stepping smoothly onto the bridge deck from the riverbanks
+            const structY = getPlacedStructureHeight(player.pos.x, player.pos.z, player.pos.y);
+            const dimDist = Math.hypot(player.pos.x - DIM_POS.x, player.pos.z - DIM_POS.z);
+            const dimY = (dimDist <= DIM_POS.radius && player.pos.y >= DIM_POS.y - 2.0) ? DIM_POS.y : -Infinity;
+            // Allow stepping smoothly onto the bridge deck, placed structures, or Dimension Island
             const onBridgeLevel = bridgeY > -Infinity && player.pos.y >= bridgeY - 1.15 && player.vel.y <= 1.5;
-            const supportY = onBridgeLevel ? Math.max(terrainY, bridgeY) : terrainY;
+            const onStructLevel = structY > -Infinity && player.pos.y >= structY - 1.15 && player.vel.y <= 1.5;
+            let supportY = onBridgeLevel ? Math.max(terrainY, bridgeY) : terrainY;
+            if (onStructLevel) supportY = Math.max(supportY, structY);
+            if (dimY > -Infinity) supportY = Math.max(supportY, dimY);
 
             if (player.pos.y <= supportY) {
                 player.pos.y = supportY;
@@ -1995,6 +4058,11 @@
                 rightLeg.rotation.x *= 0.85;
                 leftArm.rotation.x *= 0.85;
                 rightArm.rotation.x *= 0.85;
+            }
+
+            if (boneSwingTimer > 0) {
+                boneSwingTimer = Math.max(0, boneSwingTimer - dt);
+                rightArm.rotation.x = -Math.sin((boneSwingTimer / 0.32) * Math.PI) * 1.9;
             }
 
             // Dynamic wind audio pitch when gliding or high in the mountains
@@ -2113,6 +4181,7 @@
                     r.group.visible = false;
                     collectedCount++;
                     document.getElementById('relic-count').textContent = collectedCount;
+                    addEmeralds(10);
                     spawnDiscoveryBurst(r.group.position);
                     playDiscoveryChime();
                     showDiscoveryToast(r.name, r.desc);
@@ -2129,6 +4198,70 @@
                     nearestRelic = r;
                 }
             });
+
+            // Check secret Treasure Chamber discovery
+            if (!treasureFound && Math.hypot(player.pos.x - TREASURE_CHAMBER.x, player.pos.z - TREASURE_CHAMBER.z) < 6.5) {
+                treasureFound = true;
+                addEmeralds(15);
+                const t = I18N[currentLang];
+                spawnDiscoveryBurst(player.pos);
+                playDiscoveryChime();
+                showDiscoveryToast(t.toastTreasureTitle, `${t.toastTreasureSub} (+15 💎)`);
+            }
+
+            // Check new Mountain Treasure Chamber discovery
+            if (!mountainTreasureFound && Math.hypot(player.pos.x - MOUNTAIN_TREASURE.x, player.pos.z - MOUNTAIN_TREASURE.z) < 6.5) {
+                mountainTreasureFound = true;
+                addEmeralds(15);
+                const t = I18N[currentLang];
+                spawnDiscoveryBurst(player.pos);
+                playDiscoveryChime();
+                showDiscoveryToast(t.toastMountainTreasureTitle, `${t.toastMountainTreasureSub} (+15 💎)`);
+            }
+
+            // Animate & collect extra Emerald Shards (+3 Emeralds each)
+            emeraldShards.forEach(s => {
+                if (s.collected) return;
+                s.mesh.rotation.y += dt * 2.2;
+                s.mesh.position.y = s.baseY + Math.sin(elapsed * 2.8 + s.phase) * 0.22;
+                if (player.pos.distanceTo(s.mesh.position) < 2.8) {
+                    s.collected = true;
+                    s.mesh.visible = false;
+                    addEmeralds(3);
+                    spawnDiscoveryBurst(s.mesh.position);
+                    playDiscoveryChime();
+                }
+            });
+
+            // Animate & collect Ancient Bone in the Treasure Chamber
+            if (!hasBone) {
+                const boneWorldPos = new THREE.Vector3();
+                for (let b = 0; b < bonePickups.length; b++) {
+                    const bone = bonePickups[b];
+                    if (!bone.visible) continue;
+                    bone.rotation.y += dt * 2.0;
+                    bone.position.y = bone.userData.baseY + Math.sin(elapsed * 3.0) * 0.2;
+                    bone.getWorldPosition(boneWorldPos);
+                    if (player.pos.distanceTo(boneWorldPos) < 3.5) {
+                        hasBone = true;
+                        ownedWeapons.bone = true;
+                        if (!activeWeapon) activeWeapon = 'bone';
+                        bonePickups.forEach(bp => { bp.visible = false; });
+                        if (playerBoneMesh) playerBoneMesh.visible = true;
+                        const badge = document.getElementById('bone-badge');
+                        if (badge && activeWeapon === 'bone') {
+                            badge.textContent = I18N[currentLang].boneBadge;
+                            badge.classList.remove('hidden');
+                        }
+                        updateBuildHotbar();
+                        const t = I18N[currentLang];
+                        spawnDiscoveryBurst(player.pos);
+                        playDiscoveryChime();
+                        showDiscoveryToast(t.toastBoneTitle, t.toastBoneSub);
+                        break;
+                    }
+                }
+            }
 
             // Update Discovery Particles
             for (let i = particles.length - 1; i >= 0; i--) {
@@ -2180,13 +4313,169 @@
         }
 
         // Main Animation Loop
+        /**
+         * Renders the real-time top-right 2D minimap centered on the player,
+         * showing the river, Laubwald, village, house, camp, relics, and enemies.
+         */
+        function updateMinimap() {
+            const canvas = document.getElementById('minimap-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const half = size / 2;
+            const viewRange = 360; // World units visible from center to edge
+            const scale = half / viewRange;
+
+            const toMap = (wx, wz) => ({
+                x: half + (wx - player.pos.x) * scale,
+                y: half + (wz - player.pos.z) * scale
+            });
+
+            // Background terrain tone
+            ctx.fillStyle = '#064e3b';
+            ctx.fillRect(0, 0, size, size);
+
+            // Laubwald (Deciduous Forest)
+            const fPos = toMap(FOREST_POS.x, FOREST_POS.z);
+            ctx.fillStyle = 'rgba(101, 163, 13, 0.55)';
+            ctx.beginPath();
+            ctx.arc(fPos.x, fPos.y, FOREST_POS.radius * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Winding River
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = Math.max(4, 22 * scale);
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            for (let zOff = -viewRange - 20; zOff <= viewRange + 20; zOff += 18) {
+                const wz = player.pos.z + zOff;
+                const pt = toMap(getRiverCenterX(wz), wz);
+                if (zOff === -viewRange - 20) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.stroke();
+
+            // Landmarks: Base Camp, Sanctuary House, Human Civilization
+            const drawLandmark = (wx, wz, color, r = 4.5) => {
+                const p = toMap(wx, wz);
+                if (p.x < -8 || p.x > size + 8 || p.y < -8 || p.y > size + 8) return;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            };
+            drawLandmark(18.5, 51.5, '#fb923c', 4.5); // Base Camp
+            drawLandmark(HOUSE_POS.x, HOUSE_POS.z, '#facc15', 4.5); // Sanctuary House
+            drawLandmark(VILLAGE_POS.x, VILLAGE_POS.z, '#38bdf8', 5.5); // Human Civilization
+
+            // Uncollected Relics
+            relics.forEach(r => {
+                if (r.collected) return;
+                const p = toMap(r.group.position.x, r.group.position.z);
+                if (p.x < 0 || p.x > size || p.y < 0 || p.y > size) return;
+                ctx.fillStyle = '#34d399';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Enemies (Crocodiles, Lions, Night Stalkers)
+            crocodiles.forEach(c => {
+                if (c.defeated) return;
+                const p = toMap(c.group.position.x, c.group.position.z);
+                if (p.x < 0 || p.x > size || p.y < 0 || p.y > size) return;
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+            });
+            lions.forEach(l => {
+                if (l.defeated) return;
+                const p = toMap(l.group.position.x, l.group.position.z);
+                if (p.x < 0 || p.x > size || p.y < 0 || p.y > size) return;
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+            });
+            nightStalkers.forEach(s => {
+                if (!s.group.visible || s.defeated) return;
+                const p = toMap(s.group.position.x, s.group.position.z);
+                if (p.x < 0 || p.x > size || p.y < 0 || p.y > size) return;
+                ctx.fillStyle = '#c084fc';
+                ctx.fillRect(p.x - 2.5, p.y - 2.5, 5, 5);
+            });
+
+            // Player Arrow in Center
+            ctx.save();
+            ctx.translate(half, half);
+            ctx.rotate(-camState.yaw);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(0, -6);
+            ctx.lineTo(4.5, 5);
+            ctx.lineTo(0, 2.5);
+            ctx.lineTo(-4.5, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             const dt = Math.min(clock.getDelta(), 0.05);
             const elapsed = clock.getElapsedTime();
 
             updatePlayer(dt);
+            updateBuildGhost();
+            updateDayCycle(dt);
             updateCrocodiles(elapsed, dt);
+            updateLions(elapsed, dt);
+            updateNightStalkers(elapsed, dt);
+            updateVillagers(elapsed, dt);
+            // Animate portals, check Dimension teleport & bonus Dimension Emeralds
+            if (portalCooldown > 0) portalCooldown -= dt;
+            portalMeshes.forEach((pm, idx) => {
+                pm.rotation.z += dt * (idx % 2 === 0 ? 1.8 : -2.4);
+            });
+            if (portalCooldown <= 0) {
+                if (!inOtherDimension && Math.hypot(player.pos.x - VILLAGE_PORTAL_POS.x, player.pos.z - VILLAGE_PORTAL_POS.z) < 2.1 && Math.abs(player.pos.y - VILLAGE_POS.y) < 3.5) {
+                    inOtherDimension = true;
+                    portalCooldown = 2.5;
+                    player.pos.set(DIM_POS.x, DIM_POS.y + 1.0, DIM_POS.z + 10.0);
+                    player.vel.set(0, 0, 0);
+                    player.gliding = false;
+                    spawnDiscoveryBurst(player.pos);
+                    playDiscoveryChime();
+                    const t = I18N[currentLang];
+                    showDiscoveryToast(t.toastDimEnterTitle, t.toastDimEnterSub);
+                } else if (inOtherDimension && Math.hypot(player.pos.x - DIM_RETURN_PORTAL.x, player.pos.z - DIM_RETURN_PORTAL.z) < 2.3) {
+                    inOtherDimension = false;
+                    portalCooldown = 2.5;
+                    player.pos.set(VILLAGE_POS.x, VILLAGE_POS.y + 0.5, VILLAGE_POS.z - 12.5);
+                    player.vel.set(0, 0, 0);
+                    player.gliding = false;
+                    spawnDiscoveryBurst(player.pos);
+                    playDiscoveryChime();
+                    const t = I18N[currentLang];
+                    showDiscoveryToast(t.toastDimExitTitle, t.toastDimExitSub);
+                }
+            }
+            if (inOtherDimension) {
+                dimensionEmeralds.forEach(de => {
+                    if (de.collected) return;
+                    de.mesh.rotation.y += dt * 2.5;
+                    de.mesh.position.y = de.baseY + Math.sin(elapsed * 3.0 + de.phase) * 0.25;
+                    if (Math.hypot(player.pos.x - de.worldX, player.pos.z - de.worldZ) < 2.8) {
+                        de.collected = true;
+                        de.mesh.visible = false;
+                        addEmeralds(5);
+                        spawnDiscoveryBurst(player.pos);
+                        playDiscoveryChime();
+                    }
+                });
+            }
+
+            updateMinimap();
             updateCamera();
             updateEnvironmentAndRelics(elapsed, dt);
 
@@ -2203,6 +4492,15 @@
             // Keyboard
             window.addEventListener('keydown', e => {
                 keys[e.code] = true;
+                if (e.code.startsWith('Digit')) {
+                    const num = parseInt(e.code.replace('Digit', ''), 10);
+                    if (num >= 1 && num <= 9) {
+                        const items = getInventoryItems();
+                        if (num - 1 < items.length) selectInventoryIndex(num - 1);
+                    }
+                }
+                if (e.code === 'KeyR' && selectedBuildType) buildRotation += Math.PI / 4;
+                if (e.code === 'KeyE' && selectedBuildType) placeBuildingPart();
                 if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
                     e.preventDefault();
                 }
@@ -2211,8 +4509,14 @@
                 keys[e.code] = false;
             });
 
-            // Mouse Camera Orbit
+            // Mouse Camera Orbit, Left-Click Attack & Right-Click Build
+            container.addEventListener('contextmenu', e => e.preventDefault());
             container.addEventListener('mousedown', e => {
+                if (e.button === 0 && (activeWeapon || hasBone)) {
+                    useBoneAttack();
+                } else if (e.button === 2 && selectedBuildType) {
+                    placeBuildingPart();
+                }
                 camState.isDragging = true;
                 camState.lastX = e.clientX;
                 camState.lastY = e.clientY;
@@ -2231,8 +4535,14 @@
                 camState.pitch = THREE.MathUtils.clamp(camState.pitch + dy * 0.0045, -0.35, 1.15);
             });
 
-            // Mouse Wheel Zoom
+            // Mouse Wheel: Switch Inventory Items (or Ctrl+Wheel to Zoom Camera)
             container.addEventListener('wheel', e => {
+                const items = getInventoryItems();
+                if (!e.ctrlKey && items.length > 0) {
+                    const dir = e.deltaY > 0 ? 1 : -1;
+                    selectInventoryIndex(activeInventoryIndex + dir);
+                    return;
+                }
                 camState.distance = THREE.MathUtils.clamp(
                     camState.distance + e.deltaY * 0.012,
                     camState.minDistance,
@@ -2311,6 +4621,18 @@
                 player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
                 player.vel.set(0, 0, 0);
                 showDiscoveryToast(t.toastCampTitle, t.toastCampSub);
+            });
+
+            document.getElementById('build-btn-rotate').addEventListener('click', () => {
+                if (selectedBuildType) buildRotation += Math.PI / 4;
+            });
+            document.getElementById('build-btn-place').addEventListener('click', () => placeBuildingPart());
+
+            document.getElementById('btn-shop').addEventListener('click', () => {
+                toggleShop();
+            });
+            document.getElementById('btn-close-shop').addEventListener('click', () => {
+                toggleShop(false);
             });
 
             document.getElementById('btn-help').addEventListener('click', () => {
