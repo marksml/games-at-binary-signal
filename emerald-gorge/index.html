@@ -1,0 +1,2286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emerald Gorge — 3D Tropical Exploration</title>
+    <!-- Tailwind CSS for responsive layout utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js r128 for 3D rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Tone.js for procedural ambient & discovery sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Tropical Game Styling */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0b2b26;
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        #canvas-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            cursor: grab;
+        }
+
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Glassmorphic Tropical HUD Panels */
+        .hud-glass {
+            background: rgba(8, 36, 31, 0.72);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(110, 231, 183, 0.28);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        /* Tactile Game Buttons */
+        .game-btn {
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.92) 0%, rgba(5, 150, 105, 0.95) 100%);
+            border: 1px solid rgba(167, 243, 208, 0.55);
+            box-shadow: 0 4px 14px rgba(4, 120, 87, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+        }
+
+        .game-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
+        .game-btn:active {
+            transform: translateY(1px) scale(0.97);
+        }
+
+        .game-btn-secondary {
+            background: linear-gradient(180deg, rgba(15, 55, 48, 0.88) 0%, rgba(9, 36, 31, 0.94) 100%);
+            border: 1px solid rgba(110, 231, 183, 0.35);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+        }
+
+        .game-btn-secondary:hover {
+            transform: translateY(-2px);
+            border-color: rgba(110, 231, 183, 0.7);
+            background: linear-gradient(180deg, rgba(20, 75, 65, 0.92) 0%, rgba(12, 48, 42, 0.96) 100%);
+        }
+
+        .game-btn-secondary:active {
+            transform: translateY(1px) scale(0.97);
+        }
+
+        /* Discovery Toast Animation */
+        @keyframes toastSlide {
+            0% { opacity: 0; transform: translate(-50%, -24px) scale(0.92); }
+            12% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            85% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -16px) scale(0.95); }
+        }
+
+        .toast-active {
+            animation: toastSlide 4.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* Subtle Pulse for Relic Indicator */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(52, 211, 153, 0.5); }
+            50% { box-shadow: 0 0 22px rgba(52, 211, 153, 0.95); }
+        }
+
+        .relic-glow {
+            animation: pulseGlow 2.4s infinite ease-in-out;
+        }
+
+        /* Touch D-pad Buttons */
+        .touch-pad-btn {
+            background: rgba(10, 44, 38, 0.65);
+            border: 1.5px solid rgba(110, 231, 183, 0.4);
+            backdrop-filter: blur(6px);
+            touch-action: none;
+        }
+
+        .touch-pad-btn:active, .touch-pad-btn.active {
+            background: rgba(16, 185, 129, 0.75);
+            border-color: #a7f3d0;
+            transform: scale(0.94);
+        }
+    </style>
+</head>
+<body class="text-emerald-50">
+
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container" aria-label="3D Tropical Exploration Viewport"></div>
+
+    <!-- Top HUD Bar -->
+    <header class="fixed top-3 left-3 right-3 z-20 pointer-events-none flex flex-wrap items-start justify-between gap-2">
+        <!-- Left: Title & Biome/Elevation Status -->
+        <div class="hud-glass rounded-2xl px-4 py-2.5 pointer-events-auto flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shrink-0">
+                <!-- Mountain & River SVG Icon -->
+                <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 18L9 7l5 7 3-4 4 8H3z"></path>
+                    <path d="M2 21c3-1.5 6 1.5 9 0s6 1.5 11 0" stroke="#a7f3d0"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 id="hud-title" class="font-display font-extrabold text-sm sm:text-base tracking-wide text-emerald-100 leading-tight">EMERALD GORGE</h1>
+                <div class="flex items-center gap-2 text-xs text-emerald-300/90 font-medium">
+                    <span id="biome-label">Tropical River Valley</span>
+                    <span class="opacity-40">•</span>
+                    <span id="altitude-label">Alt: 12m</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Compass & Nearest Relic Radar -->
+        <div class="hud-glass rounded-2xl px-4 py-2 pointer-events-auto hidden sm:flex items-center gap-3">
+            <div class="relative w-9 h-9 rounded-full border border-emerald-400/40 bg-emerald-950/60 flex items-center justify-center">
+                <div id="compass-arrow" class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[14px] border-b-amber-300 transition-transform duration-75" style="transform-origin: center 65%;"></div>
+            </div>
+            <div class="text-xs">
+                <div id="hud-nearest-title" class="text-emerald-300/80 uppercase tracking-wider text-[10px] font-bold">Nearest Relic</div>
+                <div id="nearest-relic-info" class="font-semibold text-amber-200">Scanning valley...</div>
+            </div>
+        </div>
+
+        <!-- Right: Language Switch, Relic Counter & Glider State -->
+        <div class="hud-glass rounded-2xl px-3.5 py-2 pointer-events-auto flex items-center gap-2.5 sm:gap-3">
+            <!-- EN / DE Language Toggle Button -->
+            <button id="btn-lang" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-amber-200 border-amber-300/40 flex items-center gap-1 cursor-pointer" title="Switch Language / Sprache wechseln">
+                <span>🌐</span>
+                <span id="lang-label">EN</span>
+            </button>
+
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center relic-glow">
+                    <svg class="w-4 h-4 text-emerald-300" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="12 2 19 9 12 22 5 9 12 2"></polygon>
+                    </svg>
+                </span>
+                <div>
+                    <div id="hud-relics-label" class="text-[10px] uppercase tracking-wider text-emerald-300/80 font-bold leading-none">Relics</div>
+                    <div class="font-display font-extrabold text-base text-white leading-tight">
+                        <span id="relic-count">0</span><span class="text-emerald-400/70"> / 8</span>
+                    </div>
+                </div>
+            </div>
+            <div id="status-badge" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">
+                Exploring
+            </div>
+        </div>
+    </header>
+
+    <!-- Discovery Toast Notification -->
+    <div id="discovery-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0">
+        <div class="hud-glass rounded-2xl px-6 py-3 border-amber-300/50 text-center shadow-2xl">
+            <div id="toast-badge" class="text-[11px] uppercase tracking-widest text-amber-300 font-bold">Relic Discovered!</div>
+            <div id="toast-title" class="font-display font-extrabold text-lg text-white mt-0.5">Emerald Gorge Overlook</div>
+            <div id="toast-subtitle" class="text-xs text-emerald-200/90 mt-0.5">Ancient tropical totem awakened</div>
+        </div>
+    </div>
+
+    <!-- Bottom Action Controls Row (Centered outside main view focus) -->
+    <footer class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none w-full max-w-2xl px-3 flex justify-center">
+        <div class="hud-glass rounded-2xl p-1.5 sm:p-2 pointer-events-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+            <button id="btn-time" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Switch Time of Day">
+                <span id="time-icon">☀️</span>
+                <span id="time-text">Noon</span>
+            </button>
+            <button id="btn-camera" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Toggle Camera Perspective">
+                <span>🎥</span>
+                <span id="camera-text">3rd Person</span>
+            </button>
+            <button id="btn-sound" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Toggle Ambient Sound">
+                <span id="sound-icon">🔇</span>
+                <span id="sound-text" class="hidden sm:inline">Sound</span>
+            </button>
+            <button id="btn-reset" class="game-btn-secondary rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5 cursor-pointer" title="Return to Valley Camp">
+                <span>🧭</span>
+                <span id="camp-text" class="hidden sm:inline">Camp</span>
+            </button>
+            <button id="btn-help" class="game-btn rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 cursor-pointer" title="Controls & Map Guide">
+                <span>🗺️</span>
+                <span id="guide-text">Guide</span>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Mobile / Touch On-Screen Controls (Visible on touch devices or smaller screens) -->
+    <div id="mobile-controls" class="fixed bottom-20 left-3 right-3 z-20 pointer-events-none flex items-end justify-between md:hidden">
+        <!-- D-Pad -->
+        <div class="grid grid-cols-3 gap-1.5 pointer-events-auto">
+            <div></div>
+            <button data-key="KeyW" class="touch-pad-btn w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-emerald-100">▲</button>
+            <div></div>
+            <button data-key="KeyA" class="touch-pad-btn w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-emerald-100">◀</button>
+            <button data-key="KeyS" class="touch-pad-btn w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-emerald-100">▼</button>
+            <button data-key="KeyD" class="touch-pad-btn w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-emerald-100">▶</button>
+        </div>
+
+        <!-- Jump / Glide & Sprint -->
+        <div class="flex flex-col gap-2 pointer-events-auto">
+            <button id="touch-sprint" data-key="ShiftLeft" class="touch-pad-btn px-4 h-11 rounded-xl flex items-center justify-center text-xs font-bold uppercase tracking-wider text-emerald-100">
+                Sprint
+            </button>
+            <button data-key="Space" class="touch-pad-btn w-20 h-16 rounded-2xl flex flex-col items-center justify-center text-xs font-extrabold uppercase tracking-wider text-amber-200 border-amber-300/50">
+                <span class="text-lg leading-none">🪂</span>
+                <span id="touch-glide">Jump/Glide</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Welcome / Guide Modal Overlay -->
+    <div id="guide-modal" class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-emerald-950/75 backdrop-blur-md transition-opacity duration-300">
+        <div class="hud-glass rounded-3xl max-w-lg w-full p-6 sm:p-7 border-emerald-400/40 shadow-2xl">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shrink-0">
+                        <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 18L9 7l5 7 3-4 4 8H3z"></path>
+                            <path d="M2 21c3-1.5 6 1.5 9 0s6 1.5 11 0" stroke="#a7f3d0"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="modal-welcome-title" class="font-display font-extrabold text-xl sm:text-2xl text-white leading-tight">Welcome to Emerald Gorge</h2>
+                        <p id="modal-welcome-sub" class="text-xs sm:text-sm text-emerald-300">Lush Tropical Mountains, Deep Green Gorges & Winding Rivers</p>
+                    </div>
+                </div>
+                <button id="btn-modal-lang" class="game-btn-secondary rounded-xl px-3 py-1.5 text-xs font-extrabold text-amber-200 border-amber-300/40 shrink-0 cursor-pointer">
+                    🌐 <span id="modal-lang-label">Deutsch</span>
+                </button>
+            </div>
+
+            <p id="modal-welcome-desc" class="text-sm text-emerald-100/90 leading-relaxed mb-5">
+                Roam freely through a sunlit tropical wilderness. Climb misty volcanic peaks, swim across the turquoise canyon river, and leap from high cliffs to deploy your <strong class="text-amber-200">canopy glider</strong>. Follow the glowing sky beams and compass to uncover all <strong class="text-emerald-300">8 Ancient Emerald Relics</strong>.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6 text-xs">
+                <div class="bg-emerald-950/60 border border-emerald-500/25 rounded-xl p-3">
+                    <div id="ctrl-move-title" class="font-bold text-emerald-300 mb-1">🚶 Movement</div>
+                    <div id="ctrl-move-desc" class="text-emerald-100/85"><strong>WASD</strong> or <strong>Arrow Keys</strong> to walk & swim. Hold <strong>Shift</strong> to sprint.</div>
+                </div>
+                <div class="bg-emerald-950/60 border border-emerald-500/25 rounded-xl p-3">
+                    <div id="ctrl-glide-title" class="font-bold text-amber-300 mb-1">🪂 Jump & Glide</div>
+                    <div id="ctrl-glide-desc" class="text-emerald-100/85">Press <strong>Space</strong> to jump. Hold <strong>Space</strong> in mid-air to glide across gorges!</div>
+                </div>
+                <div class="bg-emerald-950/60 border border-emerald-500/25 rounded-xl p-3">
+                    <div id="ctrl-cam-title" class="font-bold text-teal-300 mb-1">🎥 Camera Control</div>
+                    <div id="ctrl-cam-desc" class="text-emerald-100/85"><strong>Click & Drag</strong> (or touch drag) to orbit the camera. <strong>Scroll</strong> to zoom.</div>
+                </div>
+                <div class="bg-emerald-950/60 border border-emerald-500/25 rounded-xl p-3">
+                    <div id="ctrl-goal-title" class="font-bold text-emerald-300 mb-1">💎 Exploration Goal</div>
+                    <div id="ctrl-goal-desc" class="text-emerald-100/85">Follow the <strong>compass arrow</strong> & glowing emerald beacons to collect all 8 relics.</div>
+                </div>
+            </div>
+
+            <button id="btn-start-game" class="game-btn w-full rounded-2xl py-3.5 font-display font-extrabold text-base text-white tracking-wide cursor-pointer">
+                Begin Exploration 🌴
+            </button>
+        </div>
+    </div>
+
+    <!-- Victory Celebration Modal -->
+    <div id="victory-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-emerald-950/75 backdrop-blur-md">
+        <div class="hud-glass rounded-3xl max-w-md w-full p-7 text-center border-amber-300/50 shadow-2xl">
+            <div class="text-5xl mb-3">🏆🌴✨</div>
+            <h2 id="victory-title" class="font-display font-extrabold text-2xl sm:text-3xl text-amber-200 mb-2">Master of Emerald Gorge!</h2>
+            <p id="victory-desc" class="text-sm text-emerald-100/90 leading-relaxed mb-6">
+                You have explored the tropical mountains, crossed the winding gorge river, and awakened all 8 Ancient Emerald Relics! You may continue gliding and exploring the valley freely.
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button id="btn-continue" class="game-btn rounded-xl px-5 py-3 font-bold text-sm text-white cursor-pointer">
+                    Keep Exploring
+                </button>
+                <button id="btn-replay" class="game-btn-secondary rounded-xl px-5 py-3 font-bold text-sm text-emerald-100 cursor-pointer">
+                    Reset Relics
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * EMERALD GORGE / SMARAGDSCHLUCHT — 3D TROPICAL EXPLORATION GAME (HIGH DETAIL)
+         * Single-file Three.js + Tone.js Procedural World with EN / DE Localization
+         * ============================================================================
+         */
+
+        // --- Bilingual Localization Dictionary (EN / DE) ---
+        let currentLang = 'en';
+
+        const I18N = {
+            en: {
+                hudTitle: 'EMERALD GORGE',
+                nearestTitle: 'Nearest Relic',
+                scanning: 'Scanning valley...',
+                allFound: 'All 8 Relics Found! ✨',
+                relicsLabel: 'Relics',
+                altPrefix: 'Alt',
+                biomes: {
+                    valley: 'Lush Gorge Valley',
+                    river: 'Turquoise Canyon River',
+                    peaks: 'Misty Mountain Peaks',
+                    highlands: 'Emerald Highlands',
+                    bank: 'Tropical Riverbank'
+                },
+                status: {
+                    gliding: '🪂 Gliding',
+                    swimming: '🏊 Swimming',
+                    exploring: '🥾 Exploring'
+                },
+                timeNames: ['Noon', 'Sunset', 'Dawn Mist'],
+                cam3rd: '3rd Person',
+                cam1st: '1st Person',
+                sound: 'Sound',
+                camp: 'Camp',
+                guide: 'Guide',
+                touchSprint: 'Sprint',
+                touchGlide: 'Jump/Glide',
+                toastDiscovered: 'Relic Discovered!',
+                toastCampTitle: 'Returned to Valley Camp',
+                toastCampSub: 'Ready for a new expedition',
+                toastCrocTitle: '🐊 Snapped by a Crocodile!',
+                toastCrocSub: 'Watch out when swimming in the river! Returned to Camp.',
+                modalLangBtn: 'Deutsch',
+                welcomeTitle: 'Welcome to Emerald Gorge',
+                welcomeSub: 'Lush Tropical Mountains, Deep Green Gorges & Winding Rivers',
+                welcomeDesc: 'Roam freely through a sunlit tropical wilderness. Climb misty volcanic peaks, swim across the turquoise canyon river, and leap from high cliffs to deploy your <strong class="text-amber-200">canopy glider</strong>. Follow the glowing sky beams and compass to uncover all <strong class="text-emerald-300">8 Ancient Emerald Relics</strong>.',
+                ctrlMoveTitle: '🚶 Movement',
+                ctrlMoveDesc: '<strong>WASD</strong> or <strong>Arrow Keys</strong> to walk & swim. Hold <strong>Shift</strong> to sprint.',
+                ctrlGlideTitle: '🪂 Jump & Glide',
+                ctrlGlideDesc: 'Press <strong>Space</strong> to jump. Hold <strong>Space</strong> in mid-air to glide across gorges!',
+                ctrlCamTitle: '🎥 Camera Control',
+                ctrlCamDesc: '<strong>Click & Drag</strong> (or touch drag) to orbit the camera. <strong>Scroll</strong> to zoom.',
+                ctrlGoalTitle: '💎 Exploration Goal',
+                ctrlGoalDesc: 'Follow the <strong>compass arrow</strong> & glowing emerald beacons to collect all 8 relics.',
+                startBtn: 'Begin Exploration 🌴',
+                victoryTitle: 'Master of Emerald Gorge!',
+                victoryDesc: 'You have explored the tropical mountains, crossed the winding gorge river, and awakened all 8 Ancient Emerald Relics! You may continue gliding and exploring the valley freely.',
+                continueBtn: 'Keep Exploring',
+                replayBtn: 'Reset Relics',
+                relics: [
+                    { name: 'Riverbend Cove', desc: 'Hidden along the warm turquoise sandbar' },
+                    { name: 'Emerald Gorge Overlook', desc: 'Perched above the winding canyon walls' },
+                    { name: 'Misty Falls Basin', desc: 'Shrouded in cool tropical waterfall spray' },
+                    { name: 'Canopy Hollow', desc: 'Deep within the sunlit rainforest grove' },
+                    { name: 'Twin Peaks Ridge', desc: 'High atop the western emerald mountain' },
+                    { name: 'Sunlit Gorge Crossing', desc: 'Guarding the northern river passage' },
+                    { name: 'Volcanic Spire', desc: 'Crowning the northeastern highland summit' },
+                    { name: 'Southern Sanctuary', desc: 'A tranquil plateau overlooking the valley' }
+                ]
+            },
+            de: {
+                hudTitle: 'SMARAGDSCHLUCHT',
+                nearestTitle: 'Nächstes Relikt',
+                scanning: 'Tal wird abgesucht...',
+                allFound: 'Alle 8 Relikte gefunden! ✨',
+                relicsLabel: 'Relikte',
+                altPrefix: 'Höhe',
+                biomes: {
+                    valley: 'Grünes Schluchttal',
+                    river: 'Türkisfarbener Schluchtfluss',
+                    peaks: 'Neblige Berggipfel',
+                    highlands: 'Smaragd-Hochland',
+                    bank: 'Tropisches Flussufer'
+                },
+                status: {
+                    gliding: '🪂 Gleitflug',
+                    swimming: '🏊 Schwimmen',
+                    exploring: '🥾 Erkunden'
+                },
+                timeNames: ['Mittag', 'Abendrot', 'Morgennebel'],
+                cam3rd: '3. Person',
+                cam1st: '1. Person',
+                sound: 'Ton',
+                camp: 'Lager',
+                guide: 'Anleitung',
+                touchSprint: 'Sprinten',
+                touchGlide: 'Sprung/Gleiten',
+                toastDiscovered: 'Relikt entdeckt!',
+                toastCampTitle: 'Zurück im Basislager',
+                toastCampSub: 'Bereit für eine neue Expedition',
+                toastCrocTitle: '🐊 Vom Krokodil geschnappt!',
+                toastCrocSub: 'Pass im Fluss auf! Du wurdest ins Basislager gerettet.',
+                modalLangBtn: 'English',
+                welcomeTitle: 'Willkommen in der Smaragdschlucht',
+                welcomeSub: 'Tropische Berge, tiefe grüne Schluchten & gewundene Flüsse',
+                welcomeDesc: 'Erkunde frei eine sonnendurchflutete tropische Wildnis. Erklimme neblige Vulkangipfel, durchschwimme den türkisfarbenen Schluchtfluss und springe von hohen Klippen, um deinen <strong class="text-amber-200">Blätter-Gleiter</strong> zu öffnen. Folge den leuchtenden Lichtsäulen und dem Kompass, um alle <strong class="text-emerald-300">8 Uralten Smaragd-Relikte</strong> zu finden.',
+                ctrlMoveTitle: '🚶 Bewegung',
+                ctrlMoveDesc: '<strong>WASD</strong> oder <strong>Pfeiltasten</strong> zum Laufen & Schwimmen. <strong>Shift</strong> zum Sprinten.',
+                ctrlGlideTitle: '🪂 Springen & Gleiten',
+                ctrlGlideDesc: '<strong>Leertaste</strong> zum Springen. In der Luft <strong>Leertaste halten</strong>, um über Schluchten zu gleiten!',
+                ctrlCamTitle: '🎥 Kamera-Steuerung',
+                ctrlCamDesc: '<strong>Klicken & Ziehen</strong> (oder wischen) zum Drehen. <strong>Mausrad</strong> zum Zoomen.',
+                ctrlGoalTitle: '💎 Entdecker-Ziel',
+                ctrlGoalDesc: 'Folge dem <strong>Kompasspfeil</strong> und den grünen Lichtsäulen zu allen 8 Relikten.',
+                startBtn: 'Erkundung starten 🌴',
+                victoryTitle: 'Meister der Smaragdschlucht!',
+                victoryDesc: 'Du hast die tropischen Berge erkundet, den Schluchtfluss überquert und alle 8 Uralten Smaragd-Relikte erweckt! Du kannst das Tal nun frei weiter erkunden und darüber hinweggleiten.',
+                continueBtn: 'Weiter erkunden',
+                replayBtn: 'Relikte zurücksetzen',
+                relics: [
+                    { name: 'Flussbiegung-Bucht', desc: 'Versteckt an der warmen türkisfarbenen Sandbank' },
+                    { name: 'Smaragdschlucht-Klippe', desc: 'Hoch über den gewundenen Felswänden' },
+                    { name: 'Nebelfall-Becken', desc: 'Eingehüllt in kühle tropische Wasserfall-Gischt' },
+                    { name: 'Urwald-Lichtung', desc: 'Tief im sonnigen Regenwaldhain' },
+                    { name: 'Zwillingsgipfel-Grat', desc: 'Hoch oben auf dem westlichen Smaragdberg' },
+                    { name: 'Sonnige Flussfurt', desc: 'Wächter der nördlichen Flusspassage' },
+                    { name: 'Vulkanspitze', desc: 'Krönt den nordöstlichen Hochlandgipfel' },
+                    { name: 'Südliches Heiligtum', desc: 'Ein ruhiges Hochplateau über dem Tal' }
+                ]
+            }
+        };
+
+        // --- World & Physics Constants ---
+        const WORLD_SIZE = 380;
+        const TERRAIN_SEGMENTS = 190; // High-resolution 190x190 terrain mesh for crisp gorge cliffs
+        const WATER_LEVEL = 0.0;
+        const GRAVITY = -26.0;
+        const GLIDE_GRAVITY = -4.2;
+        const JUMP_VELOCITY = 11.2;
+
+        // --- Core Three.js & Game State ---
+        let scene, camera, renderer, clock;
+        let sunLight, hemiLight, ambientLight, campLight;
+        let terrainMesh, waterMesh, waterGeometry;
+        let playerGroup, leftLeg, rightLeg, leftArm, rightArm, gliderMesh, waterRippleRing;
+        let bridgeCollider = null;
+        let crocodiles = [];
+        let crocCooldown = 0;
+        let relics = [];
+        let clouds = [];
+        let birds = [];
+        let waterfalls = [];
+        let mistParticles = [];
+        let fireflies = [];
+        let swayingFoliage = [];
+        let particles = [];
+        let campSmoke = [];
+        let collectedCount = 0;
+        let timeOfDayIndex = 0;
+        let soundEnabled = false;
+        let audioReady = false;
+        let windNoise, windFilter, chimeSynth;
+
+        // Player state
+        const player = {
+            pos: new THREE.Vector3(14, 12, 55),
+            vel: new THREE.Vector3(0, 0, 0),
+            yaw: Math.PI,
+            onGround: false,
+            inWater: false,
+            gliding: false,
+            walkCycle: 0
+        };
+
+        // Camera orbit state
+        const camState = {
+            yaw: 0.25,
+            pitch: 0.36,
+            distance: 13.5,
+            minDistance: 4.5,
+            maxDistance: 34,
+            isDragging: false,
+            lastX: 0,
+            lastY: 0,
+            firstPerson: false
+        };
+
+        // Active keyboard/touch inputs
+        const keys = {};
+
+        // Time of day lighting presets
+        const TIME_PRESETS = [
+            {
+                icon: '☀️',
+                sky: 0x5cc9e8,
+                fog: 0x8be2dc,
+                fogDensity: 0.0040,
+                sunColor: 0xfff8e7,
+                sunIntensity: 1.5,
+                sunPos: [95, 145, 70],
+                hemiSky: 0x87e8ff,
+                hemiGround: 0x1b5e38,
+                hemiIntensity: 0.78
+            },
+            {
+                icon: '🌅',
+                sky: 0xf4976c,
+                fog: 0xd98a6c,
+                fogDensity: 0.0048,
+                sunColor: 0xff9e5e,
+                sunIntensity: 1.6,
+                sunPos: [-120, 48, -90],
+                hemiSky: 0xffb38a,
+                hemiGround: 0x1a3c2f,
+                hemiIntensity: 0.68
+            },
+            {
+                icon: '🌫️',
+                sky: 0x66a5ad,
+                fog: 0x7bc2be,
+                fogDensity: 0.0062,
+                sunColor: 0xd9f7f0,
+                sunIntensity: 1.15,
+                sunPos: [110, 55, -80],
+                hemiSky: 0xa7f3d0,
+                hemiGround: 0x0f3d2e,
+                hemiIntensity: 0.80
+            }
+        ];
+
+        /**
+         * Updates all UI labels and relic metadata to the active language ('en' or 'de').
+         */
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = I18N[currentLang];
+
+            document.documentElement.lang = currentLang;
+            document.getElementById('hud-title').textContent = t.hudTitle;
+            document.getElementById('hud-nearest-title').textContent = t.nearestTitle;
+            document.getElementById('hud-relics-label').textContent = t.relicsLabel;
+            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            document.getElementById('modal-lang-label').textContent = t.modalLangBtn;
+
+            document.getElementById('time-text').textContent = t.timeNames[timeOfDayIndex];
+            document.getElementById('camera-text').textContent = camState.firstPerson ? t.cam1st : t.cam3rd;
+            document.getElementById('sound-text').textContent = t.sound;
+            document.getElementById('camp-text').textContent = t.camp;
+            document.getElementById('guide-text').textContent = t.guide;
+            document.getElementById('touch-sprint').textContent = t.touchSprint;
+            document.getElementById('touch-glide').textContent = t.touchGlide;
+            document.getElementById('toast-badge').textContent = t.toastDiscovered;
+
+            document.getElementById('modal-welcome-title').textContent = t.welcomeTitle;
+            document.getElementById('modal-welcome-sub').textContent = t.welcomeSub;
+            document.getElementById('modal-welcome-desc').innerHTML = t.welcomeDesc;
+            document.getElementById('ctrl-move-title').textContent = t.ctrlMoveTitle;
+            document.getElementById('ctrl-move-desc').innerHTML = t.ctrlMoveDesc;
+            document.getElementById('ctrl-glide-title').textContent = t.ctrlGlideTitle;
+            document.getElementById('ctrl-glide-desc').innerHTML = t.ctrlGlideDesc;
+            document.getElementById('ctrl-cam-title').textContent = t.ctrlCamTitle;
+            document.getElementById('ctrl-cam-desc').innerHTML = t.ctrlCamDesc;
+            document.getElementById('ctrl-goal-title').textContent = t.ctrlGoalTitle;
+            document.getElementById('ctrl-goal-desc').innerHTML = t.ctrlGoalDesc;
+            document.getElementById('btn-start-game').textContent = t.startBtn;
+
+            document.getElementById('victory-title').textContent = t.victoryTitle;
+            document.getElementById('victory-desc').textContent = t.victoryDesc;
+            document.getElementById('btn-continue').textContent = t.continueBtn;
+            document.getElementById('btn-replay').textContent = t.replayBtn;
+
+            if (relics && relics.length) {
+                relics.forEach((r, idx) => {
+                    r.name = t.relics[idx].name;
+                    r.desc = t.relics[idx].desc;
+                });
+            }
+        }
+
+        // ============================================================================
+        // 1. DETERMINISTIC PROCEDURAL NOISE & HIGH-DETAIL GORGE TERRAIN MATH
+        // ============================================================================
+
+        function hash2D(ix, iz) {
+            const n = Math.sin(ix * 127.1 + iz * 311.7) * 43758.5453123;
+            return n - Math.floor(n);
+        }
+
+        function valueNoise(x, z) {
+            const ix = Math.floor(x);
+            const iz = Math.floor(z);
+            const fx = x - ix;
+            const fz = z - iz;
+            const ux = fx * fx * (3.0 - 2.0 * fx);
+            const uz = fz * fz * (3.0 - 2.0 * fz);
+
+            const a = hash2D(ix, iz);
+            const b = hash2D(ix + 1, iz);
+            const c = hash2D(ix, iz + 1);
+            const d = hash2D(ix + 1, iz + 1);
+
+            return a + (b - a) * ux + (c - a) * uz + (a - b - c + d) * ux * uz;
+        }
+
+        function fbm(x, z, octaves = 5) {
+            let value = 0.0;
+            let amp = 0.5;
+            let freq = 1.0;
+            for (let i = 0; i < octaves; i++) {
+                value += amp * valueNoise(x * freq, z * freq);
+                freq *= 2.04;
+                amp *= 0.5;
+            }
+            return value;
+        }
+
+        /**
+         * Ridge noise for dramatic volcanic mountain crests and rocky strata.
+         */
+        function ridgeFbm(x, z, octaves = 4) {
+            let value = 0.0;
+            let amp = 0.5;
+            let freq = 1.0;
+            for (let i = 0; i < octaves; i++) {
+                let n = 1.0 - Math.abs(valueNoise(x * freq, z * freq) * 2.0 - 1.0);
+                n = n * n;
+                value += amp * n;
+                freq *= 2.1;
+                amp *= 0.48;
+            }
+            return value;
+        }
+
+        /**
+         * Computes the winding centerline X of the tropical river for any Z coordinate.
+         */
+        function getRiverCenterX(z) {
+            return Math.sin(z * 0.024) * 34.0 + Math.cos(z * 0.011 + 0.8) * 18.0;
+        }
+
+        /**
+         * Computes exact terrain elevation at (x, z), carving out a deep lush river gorge
+         * flanked by stepped tropical cliffs, riverbanks, and towering mountain peaks.
+         */
+        function getTerrainHeight(x, z) {
+            const riverX = getRiverCenterX(z);
+            const distToRiver = Math.abs(x - riverX);
+
+            // Base multi-octave hills + dramatic ridged mountain peaks
+            const macro = fbm(x * 0.0085 + 3.1, z * 0.0085 + 7.4, 5);
+            const ridges = ridgeFbm(x * 0.011 + 1.4, z * 0.011 + 5.2, 4);
+            const microDetail = (fbm(x * 0.055, z * 0.055, 3) - 0.5) * 2.2;
+
+            // Mountain massifs rising away from the central valley
+            const radialDist = Math.hypot(x * 0.85, z * 0.85);
+            const mountainMask = THREE.MathUtils.smoothstep(distToRiver, 18, 95);
+            let elevation = (macro * 32.0 + ridges * 30.0) * mountainMask + microDetail;
+
+            // Towering signature peaks in corners & ridges
+            const peak1 = Math.exp(-((x + 86) ** 2 + (z + 64) ** 2) / 1450) * 32;
+            const peak2 = Math.exp(-((x - 84) ** 2 + (z + 82) ** 2) / 1600) * 36;
+            const peak3 = Math.exp(-((x - 64) ** 2 + (z - 102) ** 2) / 1500) * 28;
+            const peak4 = Math.exp(-((x + 92) ** 2 + (z - 75) ** 2) / 1700) * 30;
+            elevation += peak1 + peak2 + peak3 + peak4;
+
+            // Gentle outer rim containment so the player stays inside a natural basin
+            if (radialDist > 145) {
+                elevation += (radialDist - 145) * 0.55;
+            }
+
+            // Carve the turquoise river channel and steep green gorge walls
+            if (distToRiver < 11.5) {
+                // Smooth riverbed below WATER_LEVEL (0.0)
+                const riverFactor = distToRiver / 11.5;
+                const bedDepth = -2.4 * (1.0 - riverFactor * riverFactor);
+                return bedDepth + microDetail * 0.15;
+            } else if (distToRiver < 24.0) {
+                // Riverbank & lower green gorge terrace
+                const t = (distToRiver - 11.5) / 12.5;
+                const smoothT = t * t * (3.0 - 2.0 * t);
+                const bankHeight = THREE.MathUtils.lerp(0.1, 7.5, smoothT);
+                return bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
+            } else {
+                // Steep gorge walls transitioning into highlands & mountains
+                const wallT = THREE.MathUtils.smoothstep(distToRiver, 24.0, 52.0);
+                // Add subtle rocky cliff ledges along gorge walls
+                const ledge = Math.sin(elevation * 0.65) * 0.45 * wallT;
+                return THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
+            }
+        }
+
+        /**
+         * Estimates surface steepness (gradient magnitude) at (x, z) for cliff rock coloring & tree placement.
+         */
+        function getTerrainSlope(x, z) {
+            const eps = 1.2;
+            const hL = getTerrainHeight(x - eps, z);
+            const hR = getTerrainHeight(x + eps, z);
+            const hD = getTerrainHeight(x, z - eps);
+            const hU = getTerrainHeight(x, z + eps);
+            const dx = (hR - hL) / (2 * eps);
+            const dz = (hU - hD) / (2 * eps);
+            return Math.hypot(dx, dz);
+        }
+
+        /**
+         * Generates a procedural canvas bump/detail texture for organic rock, grass, and water surface micro-detail.
+         */
+        function createDetailBumpTexture(scale = 256, contrast = 40) {
+            const canvas = document.createElement('canvas');
+            canvas.width = scale;
+            canvas.height = scale;
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.createImageData(scale, scale);
+            for (let y = 0; y < scale; y++) {
+                for (let x = 0; x < scale; x++) {
+                    const n = fbm(x * 0.14, y * 0.14, 4);
+                    const v = Math.floor(128 + (n - 0.5) * contrast * 2);
+                    const idx = (y * scale + x) * 4;
+                    imgData.data[idx] = v;
+                    imgData.data[idx + 1] = v;
+                    imgData.data[idx + 2] = v;
+                    imgData.data[idx + 3] = 255;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(28, 28);
+            return tex;
+        }
+
+        // ============================================================================
+        // 2. SCENE, LIGHTING & HIGH-DETAIL ENVIRONMENT CREATION
+        // ============================================================================
+
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(TIME_PRESETS[0].sky);
+            scene.fog = new THREE.FogExp2(TIME_PRESETS[0].fog, TIME_PRESETS[0].fogDensity);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 560);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.08;
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // Rich multi-layered tropical lighting setup
+            ambientLight = new THREE.AmbientLight(0x456b5e, 0.45);
+            scene.add(ambientLight);
+
+            hemiLight = new THREE.HemisphereLight(
+                TIME_PRESETS[0].hemiSky,
+                TIME_PRESETS[0].hemiGround,
+                TIME_PRESETS[0].hemiIntensity
+            );
+            scene.add(hemiLight);
+
+            sunLight = new THREE.DirectionalLight(TIME_PRESETS[0].sunColor, TIME_PRESETS[0].sunIntensity);
+            sunLight.position.set(...TIME_PRESETS[0].sunPos);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 10;
+            sunLight.shadow.camera.far = 380;
+            const d = 150;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            sunLight.shadow.bias = -0.0004;
+            scene.add(sunLight);
+
+            // Build world elements
+            buildTerrain();
+            buildWater();
+            buildBaseCampAndBridge();
+            buildCrocodiles();
+            buildTropicalFlora();
+            buildWaterfalls();
+            buildCloudsBirdsAndFireflies();
+            buildPlayer();
+            buildRelics();
+
+            // Place player safely at Valley Base Camp
+            player.pos.set(14, getTerrainHeight(14, 55) + 0.1, 55);
+            applyTimePreset(0);
+        }
+
+        /**
+         * Builds the high-resolution vertex-colored tropical mountains & green gorges mesh
+         * with procedural micro-bump texture and multi-biome shading.
+         */
+        function buildTerrain() {
+            const geo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
+            geo.rotateX(-Math.PI / 2);
+
+            const posAttr = geo.attributes.position;
+            const colors = [];
+            const c = new THREE.Color();
+
+            for (let i = 0; i < posAttr.count; i++) {
+                const x = posAttr.getX(i);
+                const z = posAttr.getZ(i);
+                const y = getTerrainHeight(x, z);
+                posAttr.setY(i, y);
+
+                const slope = getTerrainSlope(x, z);
+                const noiseTint = (fbm(x * 0.07, z * 0.07, 3) - 0.5) * 0.09;
+                const mossPatch = valueNoise(x * 0.14 + 4.2, z * 0.14 + 1.9);
+
+                if (y < WATER_LEVEL - 0.7) {
+                    // Turquoise riverbed with warm pebbles
+                    c.setRGB(0.18 + noiseTint, 0.52 + noiseTint, 0.46);
+                } else if (y < WATER_LEVEL + 1.2) {
+                    // Golden tropical sandbar & river pebbles
+                    c.setRGB(0.80 + noiseTint, 0.74 + noiseTint, 0.52);
+                } else if (slope > 0.92) {
+                    // Steep gorge cliff walls: layered mossy basalt & emerald lichen
+                    const mossBlend = mossPatch > 0.55 ? 0.14 : 0.0;
+                    c.setRGB(0.21 + noiseTint, 0.33 + noiseTint + mossBlend, 0.27);
+                } else if (y < 13) {
+                    // Sunlit lush rainforest valley floor & lower gorge
+                    c.setRGB(0.10 + noiseTint, 0.56 + noiseTint + mossPatch * 0.06, 0.22);
+                } else if (y < 30) {
+                    // Deep emerald jungle highlands
+                    c.setRGB(0.07 + noiseTint, 0.45 + noiseTint, 0.20);
+                } else if (y < 44) {
+                    // Sunlit tropical mountain ridges
+                    c.setRGB(0.17 + noiseTint, 0.51 + noiseTint, 0.25);
+                } else {
+                    // Misty volcanic / highland peaks with mossy stone
+                    c.setRGB(0.30 + noiseTint, 0.44 + noiseTint, 0.36);
+                }
+
+                colors.push(c.r, c.g, c.b);
+            }
+
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geo.computeVertexNormals();
+
+            const bumpTex = createDetailBumpTexture(256, 48);
+            const mat = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                bumpMap: bumpTex,
+                bumpScale: 0.32,
+                roughness: 0.85,
+                metalness: 0.04,
+                flatShading: true
+            });
+
+            terrainMesh = new THREE.Mesh(geo, mat);
+            terrainMesh.receiveShadow = true;
+            terrainMesh.castShadow = true;
+            scene.add(terrainMesh);
+        }
+
+        /**
+         * Builds the shimmering animated tropical river surface with subtle normal ripple texture.
+         */
+        function buildWater() {
+            waterGeometry = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 96, 96);
+            waterGeometry.rotateX(-Math.PI / 2);
+
+            const waterBump = createDetailBumpTexture(128, 36);
+            waterBump.repeat.set(42, 42);
+
+            const waterMat = new THREE.MeshStandardMaterial({
+                color: 0x0d9488,
+                emissive: 0x065f46,
+                emissiveIntensity: 0.30,
+                bumpMap: waterBump,
+                bumpScale: 0.14,
+                roughness: 0.12,
+                metalness: 0.38,
+                transparent: true,
+                opacity: 0.80,
+                flatShading: false
+            });
+
+            waterMesh = new THREE.Mesh(waterGeometry, waterMat);
+            waterMesh.position.y = WATER_LEVEL;
+            waterMesh.receiveShadow = true;
+            scene.add(waterMesh);
+        }
+
+        /**
+         * Builds a scenic Explorer Base Camp (tent, warm glowing campfire, wooden pier)
+         * and a wooden rope suspension bridge spanning the gorge river!
+         */
+        function buildBaseCampAndBridge() {
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9, flatShading: true });
+            const ropeMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.85, flatShading: true });
+            const canvasMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.85, side: THREE.DoubleSide, flatShading: true });
+            const stoneMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9, flatShading: true });
+
+            // 1. Valley Explorer Base Camp near (18, 52)
+            const campX = 18.5;
+            const campZ = 51.5;
+            const campY = getTerrainHeight(campX, campZ);
+            const campGroup = new THREE.Group();
+            campGroup.position.set(campX, campY, campZ);
+
+            // Explorer A-frame canvas tent
+            const tentGeo = new THREE.ConeGeometry(2.4, 2.4, 4);
+            const tent = new THREE.Mesh(tentGeo, canvasMat);
+            tent.scale.set(1.1, 1.0, 1.45);
+            tent.position.set(2.8, 1.1, -1.8);
+            tent.rotation.y = 0.55;
+            tent.castShadow = true;
+            campGroup.add(tent);
+
+            // Campfire ring of stones + glowing embers + warm point light
+            for (let s = 0; s < 8; s++) {
+                const ang = (s / 8) * Math.PI * 2;
+                const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.24, 0), stoneMat);
+                stone.position.set(Math.cos(ang) * 0.75, 0.14, Math.sin(ang) * 0.75);
+                campGroup.add(stone);
+            }
+            const embers = new THREE.Mesh(
+                new THREE.ConeGeometry(0.45, 0.65, 5),
+                new THREE.MeshBasicMaterial({ color: 0xf97316 })
+            );
+            embers.position.y = 0.32;
+            campGroup.add(embers);
+
+            campLight = new THREE.PointLight(0xfb923c, 1.8, 18);
+            campLight.position.set(0, 1.4, 0);
+            campGroup.add(campLight);
+
+            // Wooden sitting log
+            const log = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 2.2, 6), woodMat);
+            log.rotation.z = Math.PI / 2;
+            log.rotation.y = 0.4;
+            log.position.set(-0.5, 0.22, 1.8);
+            log.castShadow = true;
+            campGroup.add(log);
+
+            scene.add(campGroup);
+
+            // Campfire rising smoke puffs
+            const smokeMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.35 });
+            for (let i = 0; i < 6; i++) {
+                const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28, 0), smokeMat);
+                puff.position.set(campX, campY + 0.6 + i * 0.75, campZ);
+                scene.add(puff);
+                campSmoke.push({ mesh: puff, baseX: campX, baseY: campY + 0.6, baseZ: campZ, offset: i * 0.8 });
+            }
+
+            // 2. Wooden Rope Suspension Bridge spanning the gorge river around Z = 40
+            const bridgeZ = 40;
+            const centerX = getRiverCenterX(bridgeZ);
+            const spanWidth = 34; // Extended span so both ends meet the riverbanks cleanly
+            const bridgeY = 3.2;
+            const bridgeGroup = new THREE.Group();
+            bridgeGroup.position.set(centerX, bridgeY, bridgeZ);
+
+            // Store bridge collider bounds for solid walk-over physics
+            bridgeCollider = {
+                centerX,
+                centerZ: bridgeZ,
+                halfWidth: spanWidth / 2,
+                halfDepth: 1.45,
+                baseY: bridgeY,
+                sagAmp: 0.75
+            };
+
+            // Wooden planks with gentle catenary arch
+            const plankCount = 32;
+            for (let i = 0; i <= plankCount; i++) {
+                const t = i / plankCount - 0.5;
+                const px = t * spanWidth;
+                const sag = -Math.cos(t * Math.PI) * bridgeCollider.sagAmp;
+                const plank = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.16, 2.6), woodMat);
+                plank.position.set(px, sag, 0);
+                plank.castShadow = true;
+                plank.receiveShadow = true;
+                bridgeGroup.add(plank);
+            }
+
+            // 4 Corner Anchor Posts & Side Rope Handrails
+            [-spanWidth / 2, spanWidth / 2].forEach(endX => {
+                [-1.25, 1.25].forEach(sideZ => {
+                    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 3.2, 6), woodMat);
+                    post.position.set(endX, 0.2, sideZ);
+                    post.castShadow = true;
+                    bridgeGroup.add(post);
+                });
+            });
+
+            [-1.25, 1.25].forEach(sideZ => {
+                const rail = new THREE.Mesh(new THREE.BoxGeometry(spanWidth, 0.08, 0.08), ropeMat);
+                rail.position.set(0, 0.95, sideZ);
+                bridgeGroup.add(rail);
+            });
+
+            scene.add(bridgeGroup);
+        }
+
+        /**
+         * Computes the solid deck height of the wooden suspension bridge at (x, z),
+         * or returns -Infinity if the player is not above the bridge planks.
+         */
+        function getBridgeDeckHeight(x, z) {
+            if (!bridgeCollider) return -Infinity;
+            const dx = x - bridgeCollider.centerX;
+            const dz = z - bridgeCollider.centerZ;
+            if (Math.abs(dx) <= bridgeCollider.halfWidth && Math.abs(dz) <= bridgeCollider.halfDepth) {
+                const t = dx / (bridgeCollider.halfWidth * 2); // -0.5 to 0.5
+                const sag = -Math.cos(t * Math.PI) * bridgeCollider.sagAmp;
+                return bridgeCollider.baseY + sag + 0.08;
+            }
+            return -Infinity;
+        }
+
+        /**
+         * Spawns 3D river crocodiles patrolling the turquoise canyon river that hunt
+         * and snap at the player when they enter the water.
+         */
+        function buildCrocodiles() {
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1e3a1e, roughness: 0.78, flatShading: true });
+            const bellyMat = new THREE.MeshStandardMaterial({ color: 0x657c4a, roughness: 0.85, flatShading: true });
+            const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x112411, roughness: 0.7, flatShading: true });
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+            const toothMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+
+            const crocZones = [-95, -55, -18, 16, 66, 98];
+
+            crocZones.forEach((baseZ, idx) => {
+                const croc = new THREE.Group();
+
+                // Armored Torso
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.42, 2.5), bodyMat);
+                body.position.y = 0.05;
+                body.castShadow = true;
+                croc.add(body);
+
+                const belly = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 2.35), bellyMat);
+                belly.position.y = -0.18;
+                croc.add(belly);
+
+                // Dorsal Scutes (Spikes along back)
+                for (let s = -2; s <= 2; s++) {
+                    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.24, 4), ridgeMat);
+                    spike.position.set(0, 0.32, s * 0.44);
+                    croc.add(spike);
+                }
+
+                // Articulated Snout & Lower Jaw (hinged for biting animation)
+                const headGroup = new THREE.Group();
+                headGroup.position.set(0, 0.08, 1.25);
+
+                const upperJaw = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.24, 1.35), bodyMat);
+                upperJaw.position.set(0, 0.08, 0.65);
+                headGroup.add(upperJaw);
+
+                const lowerJaw = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.16, 1.3), bellyMat);
+                lowerJaw.position.set(0, -0.1, 0.62);
+                headGroup.add(lowerJaw);
+
+                // Teeth along jaw
+                [-0.26, 0.26].forEach(tx => {
+                    for (let tz = 0.3; tz <= 1.15; tz += 0.28) {
+                        const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.12, 3), toothMat);
+                        tooth.rotation.x = Math.PI;
+                        tooth.position.set(tx, -0.04, tz);
+                        headGroup.add(tooth);
+                    }
+                });
+
+                // Glowing Amber Reptile Eyes
+                [-0.24, 0.24].forEach(ex => {
+                    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), eyeMat);
+                    eye.position.set(ex, 0.24, 0.18);
+                    headGroup.add(eye);
+                });
+
+                croc.add(headGroup);
+
+                // Articulated Tail
+                const tailGroup = new THREE.Group();
+                tailGroup.position.set(0, 0.02, -1.25);
+                const tail1 = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.32, 1.3), bodyMat);
+                tail1.position.z = -0.65;
+                const tail2 = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.4, 4), ridgeMat);
+                tail2.rotation.x = -Math.PI / 2;
+                tail2.position.z = -1.85;
+                tailGroup.add(tail1, tail2);
+                croc.add(tailGroup);
+
+                // 4 Webbed Legs
+                [[-0.55, 0.75], [0.55, 0.75], [-0.55, -0.75], [0.55, -0.75]].forEach(([lx, lz]) => {
+                    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.18, 0.34), bodyMat);
+                    leg.position.set(lx, -0.12, lz);
+                    croc.add(leg);
+                });
+
+                const startX = getRiverCenterX(baseZ);
+                croc.position.set(startX, WATER_LEVEL - 0.05, baseZ);
+                scene.add(croc);
+
+                crocodiles.push({
+                    group: croc,
+                    headGroup,
+                    upperJaw,
+                    lowerJaw,
+                    tailGroup,
+                    homeZ: baseZ,
+                    patrolPhase: idx * 1.3,
+                    yaw: 0,
+                    chasing: false
+                });
+            });
+        }
+
+        /**
+         * Updates river crocodile patrolling, hunting AI, and player capture logic.
+         */
+        function updateCrocodiles(elapsed, dt) {
+            if (crocCooldown > 0) crocCooldown -= dt;
+
+            const playerDistToRiver = Math.abs(player.pos.x - getRiverCenterX(player.pos.z));
+            const playerVulnerable = player.inWater || (player.pos.y <= WATER_LEVEL + 0.35 && playerDistToRiver < 11.2);
+
+            crocodiles.forEach(c => {
+                const distToPlayer = Math.hypot(player.pos.x - c.group.position.x, player.pos.z - c.group.position.z);
+                c.chasing = playerVulnerable && distToPlayer < 34.0 && crocCooldown <= 0;
+
+                let targetX, targetZ, moveSpeed;
+                if (c.chasing) {
+                    // Hunt the player directly through the river
+                    targetX = player.pos.x;
+                    targetZ = player.pos.z;
+                    moveSpeed = 6.9;
+                } else {
+                    // Patrol meandering path along the river channel
+                    const patrolZ = c.homeZ + Math.sin(elapsed * 0.32 + c.patrolPhase) * 14.0;
+                    const patrolX = getRiverCenterX(patrolZ) + Math.cos(elapsed * 0.55 + c.patrolPhase) * 4.5;
+                    targetX = patrolX;
+                    targetZ = patrolZ;
+                    moveSpeed = 2.4;
+                }
+
+                const dx = targetX - c.group.position.x;
+                const dz = targetZ - c.group.position.z;
+                const stepDist = Math.hypot(dx, dz);
+
+                if (stepDist > 0.15) {
+                    const desiredYaw = Math.atan2(dx, dz);
+                    let yawDiff = desiredYaw - c.yaw;
+                    while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+                    while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+                    c.yaw += yawDiff * Math.min(1, (c.chasing ? 5.5 : 2.5) * dt);
+
+                    c.group.position.x += Math.sin(c.yaw) * moveSpeed * dt;
+                    c.group.position.z += Math.cos(c.yaw) * moveSpeed * dt;
+                }
+
+                // Keep crocodile inside the river channel
+                const riverCenter = getRiverCenterX(c.group.position.z);
+                c.group.position.x = THREE.MathUtils.clamp(c.group.position.x, riverCenter - 9.2, riverCenter + 9.2);
+                c.group.position.y = WATER_LEVEL - 0.06 + Math.sin(elapsed * 3.0 + c.patrolPhase) * 0.04;
+                c.group.rotation.y = c.yaw;
+
+                // Tail swim swish & jaw snap animation
+                const swimRate = c.chasing ? 11.0 : 4.5;
+                c.tailGroup.rotation.y = Math.sin(elapsed * swimRate + c.patrolPhase) * 0.38;
+
+                if (c.chasing && distToPlayer < 6.5) {
+                    const bite = Math.abs(Math.sin(elapsed * 12.0)) * 0.42;
+                    c.upperJaw.rotation.x = -bite;
+                    c.lowerJaw.rotation.x = bite * 0.7;
+                } else {
+                    c.upperJaw.rotation.x = THREE.MathUtils.lerp(c.upperJaw.rotation.x, 0, 6 * dt);
+                    c.lowerJaw.rotation.x = THREE.MathUtils.lerp(c.lowerJaw.rotation.x, 0, 6 * dt);
+                }
+
+                // Catch & eat player if within bite range!
+                if (c.chasing && distToPlayer < 1.95 && crocCooldown <= 0) {
+                    crocCooldown = 3.0;
+                    const t = I18N[currentLang];
+                    spawnDiscoveryBurst(player.pos);
+                    showDiscoveryToast(t.toastCrocTitle, t.toastCrocSub);
+
+                    // Respawn player safely back at Base Camp
+                    player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
+                    player.vel.set(0, 0, 0);
+                    player.inWater = false;
+                    player.gliding = false;
+                }
+            });
+        }
+
+        /**
+         * Populates the tropical valley, riverbanks, and mountain slopes with swaying palms,
+         * rainforest canopy trees, lush fern clusters, and mossy boulders.
+         */
+        function buildTropicalFlora() {
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9, flatShading: true });
+            const palmLeafMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.72, side: THREE.DoubleSide, flatShading: true });
+            const coconutMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.85, flatShading: true });
+            const canopyMat1 = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8, flatShading: true });
+            const canopyMat2 = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.78, flatShading: true });
+            const fernMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.75, flatShading: true });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9, flatShading: true });
+
+            for (let i = 0; i < 290; i++) {
+                const rx = (hash2D(i * 3.1, 1.7) - 0.5) * (WORLD_SIZE * 0.82);
+                const rz = (hash2D(2.3, i * 4.7) - 0.5) * (WORLD_SIZE * 0.82);
+                const ry = getTerrainHeight(rx, rz);
+                const slope = getTerrainSlope(rx, rz);
+
+                // Keep river channel, base camp, and bridge deck clear
+                if (ry < WATER_LEVEL + 0.6 || slope > 0.78) continue;
+                if (Math.hypot(rx - 16, rz - 53) < 9.5) continue;
+                if (Math.abs(rx - getRiverCenterX(40)) < 19 && Math.abs(rz - 40) < 4.5) continue;
+
+                const variant = hash2D(i * 7.3, i * 2.9);
+
+                if (ry < 14 && variant < 0.44) {
+                    // Tropical Coconut Palm Tree near riverbanks & valley floor
+                    const palm = new THREE.Group();
+                    const h = 5.5 + hash2D(i, 9) * 3.5;
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.34, h, 6), trunkMat);
+                    trunk.position.y = h / 2;
+                    trunk.rotation.z = (hash2D(i, 4) - 0.5) * 0.22;
+                    trunk.castShadow = true;
+                    palm.add(trunk);
+
+                    const crown = new THREE.Group();
+                    crown.position.set(Math.sin(-trunk.rotation.z) * h, h, 0);
+
+                    // Coconuts under the fronds
+                    for (let c = 0; c < 3; c++) {
+                        const ca = (c / 3) * Math.PI * 2;
+                        const nut = new THREE.Mesh(new THREE.SphereGeometry(0.2, 5, 5), coconutMat);
+                        nut.position.set(Math.cos(ca) * 0.3, -0.2, Math.sin(ca) * 0.3);
+                        crown.add(nut);
+                    }
+
+                    // Fronds
+                    for (let f = 0; f < 7; f++) {
+                        const ang = (f / 7) * Math.PI * 2;
+                        const frond = new THREE.Mesh(new THREE.ConeGeometry(0.55, 2.9, 3), palmLeafMat);
+                        frond.scale.set(1.0, 1.0, 0.22);
+                        frond.rotation.z = Math.PI / 2.6;
+                        frond.rotation.y = ang;
+                        frond.position.set(Math.cos(ang) * 1.25, 0.05, Math.sin(ang) * 1.25);
+                        frond.castShadow = true;
+                        crown.add(frond);
+                    }
+
+                    palm.add(crown);
+                    palm.position.set(rx, ry - 0.1, rz);
+                    scene.add(palm);
+
+                    swayingFoliage.push({
+                        mesh: crown,
+                        phase: hash2D(i, 12) * Math.PI * 2,
+                        amp: 0.05 + hash2D(i, 15) * 0.03
+                    });
+                } else if (ry < 38 && variant < 0.78) {
+                    // Multi-tiered Lush Rainforest Canopy Tree
+                    const tree = new THREE.Group();
+                    const h = 4.5 + hash2D(i, 11) * 4.5;
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.48, h, 6), trunkMat);
+                    trunk.position.y = h / 2;
+                    trunk.castShadow = true;
+                    tree.add(trunk);
+
+                    const mat = variant < 0.62 ? canopyMat1 : canopyMat2;
+                    const c1 = new THREE.Mesh(new THREE.DodecahedronGeometry(2.3 + hash2D(i, 3), 0), mat);
+                    c1.position.y = h + 0.8;
+                    c1.scale.set(1.2, 0.85, 1.2);
+                    c1.castShadow = true;
+
+                    const c2 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.65, 0), mat);
+                    c2.position.set(0.7, h + 1.9, 0.5);
+                    c2.castShadow = true;
+
+                    tree.add(c1, c2);
+                    tree.position.set(rx, ry - 0.1, rz);
+                    scene.add(tree);
+                } else if (variant < 0.91) {
+                    // Lush Tropical Fern Cluster
+                    const fern = new THREE.Group();
+                    for (let b = 0; b < 5; b++) {
+                        const ang = (b / 5) * Math.PI * 2;
+                        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.4, 3), fernMat);
+                        leaf.scale.z = 0.25;
+                        leaf.rotation.z = Math.PI / 3.2;
+                        leaf.rotation.y = ang;
+                        leaf.position.set(Math.cos(ang) * 0.45, 0.45, Math.sin(ang) * 0.45);
+                        fern.add(leaf);
+                    }
+                    fern.position.set(rx, ry - 0.05, rz);
+                    scene.add(fern);
+                } else {
+                    // Moss-draped Gorge Boulder
+                    const scale = 0.9 + hash2D(i, 19) * 1.9;
+                    const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(scale, 0), rockMat);
+                    boulder.scale.set(1.25, 0.78, 1.1);
+                    boulder.rotation.set(hash2D(i, 21), hash2D(i, 23) * Math.PI, 0);
+                    boulder.position.set(rx, ry + scale * 0.25, rz);
+                    boulder.castShadow = true;
+                    boulder.receiveShadow = true;
+                    scene.add(boulder);
+                }
+            }
+        }
+
+        /**
+         * Creates cascading tropical waterfalls tumbling down the steep gorge cliffs into the river,
+         * complete with whitewater foam pools and rising mist plumes.
+         */
+        function buildWaterfalls() {
+            const fallCoords = [
+                { z: -72, side: 1 },
+                { z: -18, side: 1 },
+                { z: 18, side: -1 },
+                { z: 78, side: -1 }
+            ];
+
+            const fallMat = new THREE.MeshStandardMaterial({
+                color: 0xa5f3fc,
+                emissive: 0x38bdf8,
+                emissiveIntensity: 0.35,
+                roughness: 0.2,
+                transparent: true,
+                opacity: 0.82,
+                flatShading: true
+            });
+
+            const foamMat = new THREE.MeshBasicMaterial({
+                color: 0xf0fdfa,
+                transparent: true,
+                opacity: 0.78
+            });
+
+            fallCoords.forEach((fc, idx) => {
+                const riverX = getRiverCenterX(fc.z);
+                const topX = riverX + fc.side * 34;
+                const botX = riverX + fc.side * 9.5;
+                const topY = Math.max(16, getTerrainHeight(topX, fc.z));
+                const botY = WATER_LEVEL;
+
+                const midX = (topX + botX) * 0.5;
+                const midY = (topY + botY) * 0.5;
+                const length = Math.hypot(topX - botX, topY - botY);
+                const angle = Math.atan2(botX - topX, topY - botY);
+
+                const cascade = new THREE.Mesh(new THREE.BoxGeometry(4.4, length + 2.5, 1.2), fallMat);
+                cascade.position.set(midX, midY, fc.z);
+                cascade.rotation.z = -angle;
+                scene.add(cascade);
+
+                const foam = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.2, 0.35, 12), foamMat);
+                foam.position.set(botX, WATER_LEVEL + 0.12, fc.z);
+                scene.add(foam);
+
+                waterfalls.push({ cascade, foam, phase: idx * 1.6 });
+
+                // Rising mist puffs at the base of each waterfall
+                for (let m = 0; m < 5; m++) {
+                    const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(0.95, 0), foamMat);
+                    puff.position.set(botX, WATER_LEVEL + 0.5 + m * 0.8, fc.z + (m - 2) * 0.7);
+                    scene.add(puff);
+                    mistParticles.push({
+                        mesh: puff,
+                        baseX: botX,
+                        phase: idx * 1.4 + m * 0.22
+                    });
+                }
+            });
+        }
+
+        /**
+         * Builds drifting low-poly tropical clouds, circling gorge macaws, and golden valley fireflies.
+         */
+        function buildCloudsBirdsAndFireflies() {
+            const cloudMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.95,
+                transparent: true,
+                opacity: 0.88,
+                flatShading: true
+            });
+
+            for (let i = 0; i < 20; i++) {
+                const cloud = new THREE.Group();
+                const puffs = 3 + Math.floor(Math.random() * 3);
+                for (let p = 0; p < puffs; p++) {
+                    const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(5 + Math.random() * 4, 0), cloudMat);
+                    puff.position.set((p - 1.5) * 4.5, Math.random() * 1.8, (Math.random() - 0.5) * 3.5);
+                    puff.scale.set(1.35, 0.62, 1.0);
+                    cloud.add(puff);
+                }
+                cloud.position.set(
+                    (Math.random() - 0.5) * 350,
+                    68 + Math.random() * 24,
+                    (Math.random() - 0.5) * 350
+                );
+                scene.add(cloud);
+                clouds.push({ mesh: cloud, speed: 1.2 + Math.random() * 1.4 });
+            }
+
+            const birdColors = [0xf59e0b, 0xef4444, 0x38bdf8, 0xfef08a];
+            for (let i = 0; i < 16; i++) {
+                const bird = new THREE.Group();
+                const mat = new THREE.MeshStandardMaterial({
+                    color: birdColors[i % birdColors.length],
+                    flatShading: true
+                });
+
+                const body = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.9, 4), mat);
+                body.rotation.x = Math.PI / 2;
+                bird.add(body);
+
+                const wingGeo = new THREE.BoxGeometry(1.15, 0.06, 0.35);
+                const leftWing = new THREE.Mesh(wingGeo, mat);
+                leftWing.position.x = -0.55;
+                const rightWing = new THREE.Mesh(wingGeo, mat);
+                rightWing.position.x = 0.55;
+                bird.add(leftWing, rightWing);
+
+                scene.add(bird);
+                birds.push({
+                    group: bird,
+                    leftWing,
+                    rightWing,
+                    centerX: (Math.random() - 0.5) * 145,
+                    centerZ: (Math.random() - 0.5) * 145,
+                    radius: 18 + Math.random() * 28,
+                    height: 24 + Math.random() * 26,
+                    angle: Math.random() * Math.PI * 2,
+                    speed: 0.25 + Math.random() * 0.25,
+                    flapSpeed: 7 + Math.random() * 4
+                });
+            }
+
+            // 45 Golden Sun-Motes / Tropical Fireflies drifting through the green valley
+            const moteGeo = new THREE.OctahedronGeometry(0.14, 0);
+            const moteMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+            for (let i = 0; i < 45; i++) {
+                const fx = (Math.random() - 0.5) * 180;
+                const fz = (Math.random() - 0.5) * 180;
+                const fy = Math.max(WATER_LEVEL + 1.2, getTerrainHeight(fx, fz) + 1.5 + Math.random() * 3.5);
+                const mote = new THREE.Mesh(moteGeo, moteMat);
+                mote.position.set(fx, fy, fz);
+                scene.add(mote);
+                fireflies.push({
+                    mesh: mote,
+                    baseX: fx,
+                    baseY: fy,
+                    baseZ: fz,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        /**
+         * Builds the 3D Explorer character with backpack, explorer hat, animated limbs,
+         * swimming water ripple ring, and a deployable tropical leaf/canvas glider!
+         */
+        function buildPlayer() {
+            playerGroup = new THREE.Group();
+
+            const tunicMat = new THREE.MeshStandardMaterial({ color: 0x0d9488, flatShading: true });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155, flatShading: true });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xf1c27d, flatShading: true });
+            const hatMat = new THREE.MeshStandardMaterial({ color: 0xd97706, flatShading: true });
+            const packMat = new THREE.MeshStandardMaterial({ color: 0x78350f, flatShading: true });
+
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.45), tunicMat);
+            torso.position.y = 1.35;
+            torso.castShadow = true;
+            playerGroup.add(torso);
+
+            const pack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.68, 0.32), packMat);
+            pack.position.set(0, 1.38, 0.34);
+            pack.castShadow = true;
+            playerGroup.add(pack);
+
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
+            head.position.y = 2.12;
+            head.castShadow = true;
+            playerGroup.add(head);
+
+            const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.55, 0.08, 8), hatMat);
+            hatBrim.position.y = 2.38;
+            const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.26, 8), hatMat);
+            hatTop.position.y = 2.52;
+            playerGroup.add(hatBrim, hatTop);
+
+            const legGeo = new THREE.BoxGeometry(0.26, 0.85, 0.28);
+            leftLeg = new THREE.Mesh(legGeo, pantsMat);
+            leftLeg.position.set(-0.2, 0.45, 0);
+            leftLeg.castShadow = true;
+
+            rightLeg = new THREE.Mesh(legGeo, pantsMat);
+            rightLeg.position.set(0.2, 0.45, 0);
+            rightLeg.castShadow = true;
+
+            const armGeo = new THREE.BoxGeometry(0.22, 0.78, 0.22);
+            leftArm = new THREE.Mesh(armGeo, tunicMat);
+            leftArm.position.set(-0.52, 1.38, 0);
+            leftArm.castShadow = true;
+
+            rightArm = new THREE.Mesh(armGeo, tunicMat);
+            rightArm.position.set(0.52, 1.38, 0);
+            rightArm.castShadow = true;
+
+            playerGroup.add(leftLeg, rightLeg, leftArm, rightArm);
+
+            // Swimming Water Ripple Ring
+            waterRippleRing = new THREE.Mesh(
+                new THREE.RingGeometry(0.65, 1.05, 20),
+                new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.65, side: THREE.DoubleSide })
+            );
+            waterRippleRing.rotation.x = -Math.PI / 2;
+            waterRippleRing.visible = false;
+            scene.add(waterRippleRing);
+
+            // Deployable Tropical Canopy Glider
+            gliderMesh = new THREE.Group();
+            const wingMat = new THREE.MeshStandardMaterial({
+                color: 0xf59e0b,
+                emissive: 0x92400e,
+                emissiveIntensity: 0.18,
+                side: THREE.DoubleSide,
+                flatShading: true
+            });
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+
+            const leftWing = new THREE.Mesh(new THREE.ConeGeometry(1.75, 2.2, 3), wingMat);
+            leftWing.scale.set(1.2, 0.08, 1.0);
+            leftWing.rotation.y = Math.PI / 2;
+            leftWing.position.set(-1.3, 0, 0.1);
+
+            const rightWing = new THREE.Mesh(new THREE.ConeGeometry(1.75, 2.2, 3), wingMat);
+            rightWing.scale.set(1.2, 0.08, 1.0);
+            rightWing.rotation.y = -Math.PI / 2;
+            rightWing.position.set(1.3, 0, 0.1);
+
+            const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.6, 6), frameMat);
+            crossbar.rotation.z = Math.PI / 2;
+
+            gliderMesh.add(leftWing, rightWing, crossbar);
+            gliderMesh.position.set(0, 2.85, 0);
+            gliderMesh.visible = false;
+            playerGroup.add(gliderMesh);
+
+            scene.add(playerGroup);
+        }
+
+        /**
+         * Places 8 glowing Ancient Emerald Relics across scenic landmarks in the world.
+         */
+        function buildRelics() {
+            const relicCoords = [
+                { x: -16, z: 36 },
+                { x: 56, z: 32 },
+                { x: 46, z: -18 },
+                { x: -58, z: 8 },
+                { x: -86, z: -64 },
+                { x: -24, z: -98 },
+                { x: 84, z: -82 },
+                { x: 64, z: 102 }
+            ];
+
+            const crystalMat = new THREE.MeshStandardMaterial({
+                color: 0x34d399,
+                emissive: 0x10b981,
+                emissiveIntensity: 0.80,
+                roughness: 0.15,
+                metalness: 0.45,
+                flatShading: true
+            });
+
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0xfde68a,
+                transparent: true,
+                opacity: 0.88
+            });
+
+            const beaconMat = new THREE.MeshBasicMaterial({
+                color: 0x34d399,
+                transparent: true,
+                opacity: 0.18,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+
+            const tRelics = I18N[currentLang].relics;
+
+            relics = relicCoords.map((loc, idx) => {
+                const groundY = Math.max(WATER_LEVEL + 0.8, getTerrainHeight(loc.x, loc.z));
+                const group = new THREE.Group();
+                group.position.set(loc.x, groundY + 2.2, loc.z);
+
+                const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.1, 0), crystalMat);
+                crystal.scale.set(0.85, 1.45, 0.85);
+                group.add(crystal);
+
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(1.65, 0.08, 8, 24), ringMat);
+                ring.rotation.x = Math.PI / 2.4;
+                group.add(ring);
+
+                const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.9, 58, 10, 1, true), beaconMat);
+                beacon.position.y = 27;
+                group.add(beacon);
+
+                const pedestal = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1.3, 1.75, 0.85, 7),
+                    new THREE.MeshStandardMaterial({ color: 0x475569, flatShading: true })
+                );
+                pedestal.position.y = -1.9;
+                group.add(pedestal);
+
+                scene.add(group);
+
+                return {
+                    id: idx,
+                    name: tRelics[idx].name,
+                    desc: tRelics[idx].desc,
+                    group,
+                    crystal,
+                    ring,
+                    beacon,
+                    baseY: groundY + 2.2,
+                    collected: false
+                };
+            });
+        }
+
+        // ============================================================================
+        // 3. PROCEDURAL AUDIO (TONE.JS - NO EXTERNAL AUDIO URLS)
+        // ============================================================================
+
+        async function initAudio() {
+            if (audioReady) return;
+            try {
+                await Tone.start();
+
+                // Soft tropical breeze / distant river ambience using filtered pink noise
+                windFilter = new Tone.Filter(380, 'lowpass').toDestination();
+                windNoise = new Tone.Noise('pink').connect(windFilter);
+                windNoise.volume.value = -26;
+
+                // Harmonic crystal chime synth for relic discoveries
+                const reverb = new Tone.Reverb({ decay: 2.8, wet: 0.45 }).toDestination();
+                chimeSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.03, decay: 0.4, sustain: 0.2, release: 1.4 }
+                }).connect(reverb);
+                chimeSynth.volume.value = -10;
+
+                audioReady = true;
+            } catch (err) {
+                console.warn('Audio initialization skipped:', err);
+            }
+        }
+
+        async function toggleSound(forceOn = null) {
+            await initAudio();
+            if (!audioReady) return;
+
+            soundEnabled = forceOn !== null ? forceOn : !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+
+            if (soundEnabled) {
+                if (windNoise.state !== 'started') windNoise.start();
+                icon.textContent = '🔊';
+            } else {
+                if (windNoise.state === 'started') windNoise.stop();
+                icon.textContent = '🔇';
+            }
+        }
+
+        function playDiscoveryChime() {
+            if (!soundEnabled || !audioReady || !chimeSynth) return;
+            const now = Tone.now();
+            chimeSynth.triggerAttackRelease(['E5', 'G#5', 'B5'], '4n', now);
+            chimeSynth.triggerAttackRelease(['E6'], '2n', now + 0.18);
+        }
+
+        // ============================================================================
+        // 4. PARTICLE EFFECTS, UI UPDATES & GAMEPLAY LOOP
+        // ============================================================================
+
+        function spawnDiscoveryBurst(pos) {
+            const geo = new THREE.OctahedronGeometry(0.22, 0);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x6ee7b7 });
+            for (let i = 0; i < 24; i++) {
+                const p = new THREE.Mesh(geo, mat);
+                p.position.copy(pos);
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3 + Math.random() * 6;
+                scene.add(p);
+                particles.push({
+                    mesh: p,
+                    vel: new THREE.Vector3(Math.cos(angle) * speed, 4 + Math.random() * 6, Math.sin(angle) * speed),
+                    life: 1.3
+                });
+            }
+        }
+
+        function showDiscoveryToast(title, subtitle) {
+            const toast = document.getElementById('discovery-toast');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-subtitle').textContent = subtitle;
+            toast.classList.remove('toast-active');
+            void toast.offsetWidth; // Force reflow to restart CSS animation
+            toast.classList.add('toast-active');
+        }
+
+        function applyTimePreset(index) {
+            timeOfDayIndex = index % TIME_PRESETS.length;
+            const p = TIME_PRESETS[timeOfDayIndex];
+
+            scene.background.setHex(p.sky);
+            scene.fog.color.setHex(p.fog);
+            scene.fog.density = p.fogDensity;
+
+            sunLight.color.setHex(p.sunColor);
+            sunLight.intensity = p.sunIntensity;
+            sunLight.position.set(...p.sunPos);
+
+            hemiLight.color.setHex(p.hemiSky);
+            hemiLight.groundColor.setHex(p.hemiGround);
+            hemiLight.intensity = p.hemiIntensity;
+
+            document.getElementById('time-icon').textContent = p.icon;
+            document.getElementById('time-text').textContent = I18N[currentLang].timeNames[timeOfDayIndex];
+        }
+
+        function updatePlayer(dt) {
+            // Directional input relative to camera yaw
+            let moveForward = 0;
+            let moveRight = 0;
+            if (keys['KeyW'] || keys['ArrowUp']) moveForward += 1;
+            if (keys['KeyS'] || keys['ArrowDown']) moveForward -= 1;
+            if (keys['KeyD'] || keys['ArrowRight']) moveRight += 1;
+            if (keys['KeyA'] || keys['ArrowLeft']) moveRight -= 1;
+
+            const isSprinting = keys['ShiftLeft'] || keys['ShiftRight'];
+            const jumpHeld = keys['Space'];
+
+            // Horizontal movement vector
+            const inputVec = new THREE.Vector3();
+            if (moveForward !== 0 || moveRight !== 0) {
+                const forward = new THREE.Vector3(-Math.sin(camState.yaw), 0, -Math.cos(camState.yaw));
+                const right = new THREE.Vector3(Math.cos(camState.yaw), 0, -Math.sin(camState.yaw));
+                inputVec.addScaledVector(forward, moveForward).addScaledVector(right, moveRight).normalize();
+            }
+
+            // Determine current speed based on terrain/water/gliding state
+            let speed = 11.5;
+            if (isSprinting && !player.inWater) speed = 18.0;
+            if (player.inWater) speed = 8.2;
+            if (player.gliding) speed = 22.0;
+
+            // Smooth horizontal velocity
+            const targetVx = inputVec.x * speed;
+            const targetVz = inputVec.z * speed;
+            const accel = player.onGround ? 12.0 : (player.gliding ? 3.5 : 5.0);
+            player.vel.x = THREE.MathUtils.lerp(player.vel.x, targetVx, Math.min(1, accel * dt));
+            player.vel.z = THREE.MathUtils.lerp(player.vel.z, targetVz, Math.min(1, accel * dt));
+
+            // Rotate explorer smoothly toward movement direction
+            if (inputVec.lengthSq() > 0.01) {
+                const targetYaw = Math.atan2(inputVec.x, inputVec.z);
+                let diff = targetYaw - player.yaw;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                player.yaw += diff * Math.min(1, 10 * dt);
+            }
+
+            // Gliding activation: airborne, falling, holding Space, and above water
+            if (!player.onGround && !player.inWater && jumpHeld && player.vel.y < -1.0) {
+                player.gliding = true;
+            } else {
+                player.gliding = false;
+            }
+
+            // Gravity & Buoyancy
+            if (player.inWater) {
+                const targetWaterY = WATER_LEVEL - 0.85;
+                player.vel.y += (targetWaterY - player.pos.y) * 14.0 * dt;
+                player.vel.y *= 0.88;
+                if (jumpHeld) {
+                    player.vel.y = 9.5;
+                    player.inWater = false;
+                }
+            } else if (player.gliding) {
+                player.vel.y = Math.max(player.vel.y + GLIDE_GRAVITY * dt, -3.6);
+            } else {
+                player.vel.y += GRAVITY * dt;
+            }
+
+            // Jump from ground
+            if (player.onGround && jumpHeld) {
+                player.vel.y = JUMP_VELOCITY;
+                player.onGround = false;
+            }
+
+            // Apply displacement
+            player.pos.x += player.vel.x * dt;
+            player.pos.z += player.vel.z * dt;
+            player.pos.y += player.vel.y * dt;
+
+            // Clamp within playable world bounds
+            const limit = WORLD_SIZE * 0.46;
+            player.pos.x = THREE.MathUtils.clamp(player.pos.x, -limit, limit);
+            player.pos.z = THREE.MathUtils.clamp(player.pos.z, -limit, limit);
+
+            // Ground, Wooden Suspension Bridge & Water collision
+            const terrainY = getTerrainHeight(player.pos.x, player.pos.z);
+            const bridgeY = getBridgeDeckHeight(player.pos.x, player.pos.z);
+            // Allow stepping smoothly onto the bridge deck from the riverbanks
+            const onBridgeLevel = bridgeY > -Infinity && player.pos.y >= bridgeY - 1.15 && player.vel.y <= 1.5;
+            const supportY = onBridgeLevel ? Math.max(terrainY, bridgeY) : terrainY;
+
+            if (player.pos.y <= supportY) {
+                player.pos.y = supportY;
+                player.vel.y = 0;
+                player.onGround = true;
+                player.gliding = false;
+            } else {
+                player.onGround = false;
+            }
+
+            player.inWater = (player.pos.y < WATER_LEVEL - 0.65);
+
+            // Update swimming water ripple ring
+            if (player.inWater) {
+                waterRippleRing.visible = true;
+                waterRippleRing.position.set(player.pos.x, WATER_LEVEL + 0.08, player.pos.z);
+                const pulse = 1.0 + Math.sin(performance.now() * 0.006) * 0.25;
+                waterRippleRing.scale.set(pulse, pulse, 1);
+            } else {
+                waterRippleRing.visible = false;
+            }
+
+            // Update 3D player mesh & limb animations
+            playerGroup.position.copy(player.pos);
+            playerGroup.rotation.y = player.yaw;
+            playerGroup.visible = !camState.firstPerson;
+            gliderMesh.visible = player.gliding && !camState.firstPerson;
+
+            const horizSpeed = Math.hypot(player.vel.x, player.vel.z);
+            if (player.gliding) {
+                leftLeg.rotation.x = 0.25;
+                rightLeg.rotation.x = 0.25;
+                leftArm.rotation.x = Math.PI;
+                rightArm.rotation.x = Math.PI;
+            } else if (horizSpeed > 0.6) {
+                player.walkCycle += dt * horizSpeed * 0.85;
+                const swing = Math.sin(player.walkCycle) * 0.65;
+                leftLeg.rotation.x = swing;
+                rightLeg.rotation.x = -swing;
+                leftArm.rotation.x = -swing * 0.8;
+                rightArm.rotation.x = swing * 0.8;
+            } else {
+                leftLeg.rotation.x *= 0.85;
+                rightLeg.rotation.x *= 0.85;
+                leftArm.rotation.x *= 0.85;
+                rightArm.rotation.x *= 0.85;
+            }
+
+            // Dynamic wind audio pitch when gliding or high in the mountains
+            if (soundEnabled && audioReady && windFilter) {
+                const targetFreq = player.gliding ? 950 : (320 + Math.max(0, player.pos.y) * 9);
+                windFilter.frequency.rampTo(targetFreq, 0.2);
+            }
+        }
+
+        function updateCamera() {
+            if (camState.firstPerson) {
+                const eyePos = new THREE.Vector3(player.pos.x, player.pos.y + 2.15, player.pos.z);
+                camera.position.copy(eyePos);
+                const lookTarget = new THREE.Vector3(
+                    eyePos.x - Math.sin(camState.yaw) * Math.cos(camState.pitch),
+                    eyePos.y - Math.sin(camState.pitch),
+                    eyePos.z - Math.cos(camState.yaw) * Math.cos(camState.pitch)
+                );
+                camera.lookAt(lookTarget);
+            } else {
+                const target = new THREE.Vector3(player.pos.x, player.pos.y + 1.8, player.pos.z);
+                const offsetX = Math.sin(camState.yaw) * Math.cos(camState.pitch) * camState.distance;
+                const offsetY = Math.sin(camState.pitch) * camState.distance;
+                const offsetZ = Math.cos(camState.yaw) * Math.cos(camState.pitch) * camState.distance;
+
+                const desiredPos = new THREE.Vector3(target.x + offsetX, target.y + offsetY, target.z + offsetZ);
+
+                // Prevent camera from clipping below terrain
+                const minCamY = getTerrainHeight(desiredPos.x, desiredPos.z) + 1.2;
+                if (desiredPos.y < minCamY) desiredPos.y = minCamY;
+
+                camera.position.lerp(desiredPos, 0.22);
+                camera.lookAt(target);
+            }
+        }
+
+        function updateEnvironmentAndRelics(elapsed, dt) {
+            // Subtle water wave motion & flowing texture offset
+            waterMesh.position.y = WATER_LEVEL + Math.sin(elapsed * 1.8) * 0.08;
+            if (waterMesh.material && waterMesh.material.bumpMap) {
+                waterMesh.material.bumpMap.offset.y -= dt * 0.14;
+                waterMesh.material.bumpMap.offset.x += Math.sin(elapsed * 0.3) * dt * 0.03;
+            }
+
+            // Animate waterfall foam shimmer & rising mist plumes
+            waterfalls.forEach(wf => {
+                const s = 1.0 + Math.sin(elapsed * 4.5 + wf.phase) * 0.14;
+                wf.foam.scale.set(s, 1, s);
+            });
+
+            mistParticles.forEach(m => {
+                const cycle = (elapsed * 0.55 + m.phase) % 1.0;
+                m.mesh.position.y = WATER_LEVEL + 0.5 + cycle * 4.8;
+                m.mesh.position.x = m.baseX + Math.sin(elapsed + m.phase) * 0.8;
+                m.mesh.scale.setScalar(0.7 + cycle * 1.1);
+            });
+
+            // Gentle breeze sway on palm crowns
+            swayingFoliage.forEach(f => {
+                f.mesh.rotation.z = Math.sin(elapsed * 1.4 + f.phase) * f.amp;
+                f.mesh.rotation.x = Math.cos(elapsed * 1.1 + f.phase) * f.amp * 0.7;
+            });
+
+            // Campfire flicker & rising smoke
+            if (campLight) {
+                campLight.intensity = 1.75 + Math.sin(elapsed * 11.0) * 0.35;
+            }
+            campSmoke.forEach(s => {
+                const t = (elapsed * 0.35 + s.offset) % 1.0;
+                s.mesh.position.y = s.baseY + t * 5.2;
+                s.mesh.position.x = s.baseX + Math.sin(elapsed * 1.2 + s.offset) * 0.65;
+                s.mesh.scale.setScalar(0.6 + t * 1.4);
+            });
+
+            // Drifting golden valley fireflies
+            fireflies.forEach(f => {
+                f.mesh.position.x = f.baseX + Math.sin(elapsed * 0.9 + f.phase) * 1.8;
+                f.mesh.position.y = f.baseY + Math.cos(elapsed * 1.3 + f.phase) * 0.75;
+                f.mesh.position.z = f.baseZ + Math.cos(elapsed * 0.8 + f.phase) * 1.8;
+            });
+
+            // Drift clouds
+            clouds.forEach(c => {
+                c.mesh.position.x += c.speed * dt;
+                if (c.mesh.position.x > 210) c.mesh.position.x = -210;
+            });
+
+            // Circle tropical birds
+            birds.forEach(b => {
+                b.angle += b.speed * dt;
+                const nx = b.centerX + Math.cos(b.angle) * b.radius;
+                const nz = b.centerZ + Math.sin(b.angle) * b.radius;
+                b.group.position.set(nx, b.height + Math.sin(elapsed * 1.5 + b.angle) * 1.4, nz);
+                b.group.rotation.y = -b.angle;
+
+                const flap = Math.sin(elapsed * b.flapSpeed) * 0.55;
+                b.leftWing.rotation.z = flap;
+                b.rightWing.rotation.z = -flap;
+            });
+
+            // Animate Relics & Check Collection + Find Nearest Relic
+            let nearestRelic = null;
+            let nearestDist = Infinity;
+
+            relics.forEach(r => {
+                if (r.collected) return;
+
+                r.crystal.rotation.y += dt * 1.6;
+                r.crystal.position.y = Math.sin(elapsed * 2.5 + r.id) * 0.35;
+                r.ring.rotation.z += dt * 1.2;
+                r.ring.rotation.y += dt * 0.8;
+
+                const dist = player.pos.distanceTo(r.group.position);
+                if (dist < 3.8) {
+                    r.collected = true;
+                    r.group.visible = false;
+                    collectedCount++;
+                    document.getElementById('relic-count').textContent = collectedCount;
+                    spawnDiscoveryBurst(r.group.position);
+                    playDiscoveryChime();
+                    showDiscoveryToast(r.name, r.desc);
+
+                    if (collectedCount === relics.length) {
+                        setTimeout(() => {
+                            const modal = document.getElementById('victory-modal');
+                            modal.classList.remove('hidden');
+                            modal.classList.add('flex');
+                        }, 1600);
+                    }
+                } else if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestRelic = r;
+                }
+            });
+
+            // Update Discovery Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.life -= dt;
+                p.vel.y -= 10 * dt;
+                p.mesh.position.addScaledVector(p.vel, dt);
+                p.mesh.scale.setScalar(Math.max(0.01, p.life));
+                if (p.life <= 0) {
+                    scene.remove(p.mesh);
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Update HUD Biome, Altitude, Status & Compass
+            const t = I18N[currentLang];
+            const alt = Math.round(player.pos.y);
+            document.getElementById('altitude-label').textContent = `${t.altPrefix}: ${alt}m`;
+
+            let biome = t.biomes.valley;
+            if (player.inWater) biome = t.biomes.river;
+            else if (alt > 34) biome = t.biomes.peaks;
+            else if (alt > 16) biome = t.biomes.highlands;
+            else if (alt < 2) biome = t.biomes.bank;
+            document.getElementById('biome-label').textContent = biome;
+
+            const statusBadge = document.getElementById('status-badge');
+            if (player.gliding) {
+                statusBadge.textContent = t.status.gliding;
+            } else if (player.inWater) {
+                statusBadge.textContent = t.status.swimming;
+            } else {
+                statusBadge.textContent = t.status.exploring;
+            }
+
+            // Compass pointing toward nearest uncollected relic relative to camera yaw
+            const compassArrow = document.getElementById('compass-arrow');
+            const nearestLabel = document.getElementById('nearest-relic-info');
+            if (nearestRelic) {
+                const dx = nearestRelic.group.position.x - player.pos.x;
+                const dz = nearestRelic.group.position.z - player.pos.z;
+                const worldAngle = Math.atan2(dx, -dz);
+                const relAngle = worldAngle + camState.yaw;
+                compassArrow.style.transform = `rotate(${relAngle}rad)`;
+                nearestLabel.textContent = `${nearestRelic.name} (${Math.round(nearestDist)}m)`;
+            } else {
+                nearestLabel.textContent = t.allFound;
+            }
+        }
+
+        // Main Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.getElapsedTime();
+
+            updatePlayer(dt);
+            updateCrocodiles(elapsed, dt);
+            updateCamera();
+            updateEnvironmentAndRelics(elapsed, dt);
+
+            renderer.render(scene, camera);
+        }
+
+        // ============================================================================
+        // 5. EVENT LISTENERS (MOUSE, TOUCH, KEYBOARD & UI BUTTONS)
+        // ============================================================================
+
+        function setupControls() {
+            const container = document.getElementById('canvas-container');
+
+            // Keyboard
+            window.addEventListener('keydown', e => {
+                keys[e.code] = true;
+                if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                    e.preventDefault();
+                }
+            });
+            window.addEventListener('keyup', e => {
+                keys[e.code] = false;
+            });
+
+            // Mouse Camera Orbit
+            container.addEventListener('mousedown', e => {
+                camState.isDragging = true;
+                camState.lastX = e.clientX;
+                camState.lastY = e.clientY;
+            });
+            window.addEventListener('mouseup', () => {
+                camState.isDragging = false;
+            });
+            window.addEventListener('mousemove', e => {
+                if (!camState.isDragging) return;
+                const dx = e.clientX - camState.lastX;
+                const dy = e.clientY - camState.lastY;
+                camState.lastX = e.clientX;
+                camState.lastY = e.clientY;
+
+                camState.yaw -= dx * 0.0055;
+                camState.pitch = THREE.MathUtils.clamp(camState.pitch + dy * 0.0045, -0.35, 1.15);
+            });
+
+            // Mouse Wheel Zoom
+            container.addEventListener('wheel', e => {
+                camState.distance = THREE.MathUtils.clamp(
+                    camState.distance + e.deltaY * 0.012,
+                    camState.minDistance,
+                    camState.maxDistance
+                );
+            }, { passive: true });
+
+            // Touch Camera Drag on Canvas
+            container.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) {
+                    camState.isDragging = true;
+                    camState.lastX = e.touches[0].clientX;
+                    camState.lastY = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchmove', e => {
+                if (!camState.isDragging || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - camState.lastX;
+                const dy = e.touches[0].clientY - camState.lastY;
+                camState.lastX = e.touches[0].clientX;
+                camState.lastY = e.touches[0].clientY;
+
+                camState.yaw -= dx * 0.007;
+                camState.pitch = THREE.MathUtils.clamp(camState.pitch + dy * 0.0055, -0.35, 1.15);
+            }, { passive: true });
+
+            container.addEventListener('touchend', () => {
+                camState.isDragging = false;
+            });
+
+            // Mobile On-Screen Touch Pad Controls
+            document.querySelectorAll('.touch-pad-btn').forEach(btn => {
+                const code = btn.getAttribute('data-key');
+                const press = (e) => {
+                    e.preventDefault();
+                    keys[code] = true;
+                    btn.classList.add('active');
+                };
+                const release = (e) => {
+                    e.preventDefault();
+                    keys[code] = false;
+                    btn.classList.remove('active');
+                };
+                btn.addEventListener('touchstart', press, { passive: false });
+                btn.addEventListener('touchend', release, { passive: false });
+                btn.addEventListener('touchcancel', release, { passive: false });
+                btn.addEventListener('mousedown', press);
+                btn.addEventListener('mouseup', release);
+                btn.addEventListener('mouseleave', release);
+            });
+
+            // HUD Buttons
+            const handleLanguageToggle = () => {
+                setLanguage(currentLang === 'en' ? 'de' : 'en');
+            };
+            document.getElementById('btn-lang').addEventListener('click', handleLanguageToggle);
+            document.getElementById('btn-modal-lang').addEventListener('click', handleLanguageToggle);
+
+            document.getElementById('btn-time').addEventListener('click', () => {
+                applyTimePreset(timeOfDayIndex + 1);
+            });
+
+            document.getElementById('btn-camera').addEventListener('click', () => {
+                camState.firstPerson = !camState.firstPerson;
+                const t = I18N[currentLang];
+                document.getElementById('camera-text').textContent = camState.firstPerson ? t.cam1st : t.cam3rd;
+            });
+
+            document.getElementById('btn-sound').addEventListener('click', () => {
+                toggleSound();
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                const t = I18N[currentLang];
+                player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
+                player.vel.set(0, 0, 0);
+                showDiscoveryToast(t.toastCampTitle, t.toastCampSub);
+            });
+
+            document.getElementById('btn-help').addEventListener('click', () => {
+                const modal = document.getElementById('guide-modal');
+                modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+            });
+
+            document.getElementById('btn-start-game').addEventListener('click', () => {
+                const modal = document.getElementById('guide-modal');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+                toggleSound(true);
+            });
+
+            document.getElementById('btn-continue').addEventListener('click', () => {
+                const modal = document.getElementById('victory-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+
+            document.getElementById('btn-replay').addEventListener('click', () => {
+                collectedCount = 0;
+                document.getElementById('relic-count').textContent = '0';
+                relics.forEach(r => {
+                    r.collected = false;
+                    r.group.visible = true;
+                });
+                const modal = document.getElementById('victory-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
+            });
+
+            // Responsive Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Start game cleanly on window load
+        window.onload = function () {
+            try {
+                // Auto-detect German browser language if available, otherwise default to English
+                const browserLang = (navigator.language || '').toLowerCase();
+                if (browserLang.startsWith('de')) {
+                    currentLang = 'de';
+                }
+                initScene();
+                setLanguage(currentLang);
+                setupControls();
+                animate();
+            } catch (error) {
+                console.error('Failed to initialize Emerald Gorge:', error);
+            }
+        };
+    </script>
+</body>
+</html>
