@@ -444,6 +444,8 @@
                 toastDimEnterSub: 'You stepped through the villager portal into another dimension!',
                 toastDimExitTitle: '🌍 Returned to Emerald Gorge',
                 toastDimExitSub: 'Back in the human village!',
+                toastFallTitle: '💀 Fatal Fall!',
+                toastFallSub: 'You fell from too high! Returned to the Sanctuary House.',
                 shopBtn: 'Shop',
                 shopTitle: '💎 Emerald Shop',
                 shopBalanceLabel: 'Your Emeralds:',
@@ -549,6 +551,8 @@
                 toastDimEnterSub: 'Du bist durch das Dorf-Portal in eine andere Dimension gereist!',
                 toastDimExitTitle: '🌍 Zurück in der Smaragdschlucht',
                 toastDimExitSub: 'Wieder zurück im Menschendorf!',
+                toastFallTitle: '💀 Tödlicher Sturz!',
+                toastFallSub: 'Du bist aus zu grosser Höhe gefallen! Zurück beim Rettungshaus.',
                 shopBtn: 'Shop',
                 shopTitle: '💎 Smaragd-Shop',
                 shopBalanceLabel: 'Deine Smaragde:',
@@ -641,6 +645,7 @@
         let portalCooldown = 0;
         let portalMeshes = [];
         let dimensionEmeralds = [];
+        let fallStartY = null;
         let treasureFound = false;
         let mountainTreasureFound = false;
         let hasBone = false;
@@ -4014,12 +4019,44 @@
             if (dimY > -Infinity) supportY = Math.max(supportY, dimY);
 
             if (player.pos.y <= supportY) {
+                const fallDist = (!player.onGround && fallStartY !== null) ? (fallStartY - supportY) : 0;
                 player.pos.y = supportY;
                 player.vel.y = 0;
                 player.onGround = true;
                 player.gliding = false;
+                fallStartY = null;
+
+                // Fatal fall if landing hard from > 14 units high (gliding or deep water saves you)
+                if (fallDist > 14.0 && supportY >= WATER_LEVEL - 0.3) {
+                    inOtherDimension = false;
+                    const t = I18N[currentLang];
+                    spawnDiscoveryBurst(player.pos);
+                    showDiscoveryToast(t.toastFallTitle, t.toastFallSub);
+                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
+                    player.vel.set(0, 0, 0);
+                    player.inWater = false;
+                    player.gliding = false;
+                }
             } else {
                 player.onGround = false;
+                if (player.gliding || player.inWater) {
+                    fallStartY = player.pos.y;
+                } else {
+                    fallStartY = fallStartY === null ? player.pos.y : Math.max(fallStartY, player.pos.y);
+                }
+
+                // Falling into the void off the Crystal Dimension Island is also fatal
+                if (inOtherDimension && player.pos.y < DIM_POS.y - 35.0) {
+                    inOtherDimension = false;
+                    fallStartY = null;
+                    const t = I18N[currentLang];
+                    spawnDiscoveryBurst(player.pos);
+                    showDiscoveryToast(t.toastFallTitle, t.toastFallSub);
+                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
+                    player.vel.set(0, 0, 0);
+                    player.inWater = false;
+                    player.gliding = false;
+                }
             }
 
             player.inWater = (player.pos.y < WATER_LEVEL - 0.65);
