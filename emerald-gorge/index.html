@@ -371,7 +371,7 @@
                 toastCampTitle: 'Returned to Valley Camp',
                 toastCampSub: 'Ready for a new expedition',
                 toastCrocTitle: '🐊 Snapped by a Crocodile!',
-                toastCrocSub: 'Watch out when swimming in the river! Returned to Camp.',
+                toastCrocSub: 'Watch out when swimming in the river! Teleported to the Sanctuary House.',
                 modalLangBtn: 'Deutsch',
                 welcomeTitle: 'Welcome to Emerald Gorge',
                 welcomeSub: 'Lush Tropical Mountains, Deep Green Gorges & Winding Rivers',
@@ -431,7 +431,7 @@
                 toastCampTitle: 'Zurück im Basislager',
                 toastCampSub: 'Bereit für eine neue Expedition',
                 toastCrocTitle: '🐊 Vom Krokodil geschnappt!',
-                toastCrocSub: 'Pass im Fluss auf! Du wurdest ins Basislager gerettet.',
+                toastCrocSub: 'Pass im Fluss auf! Du wurdest zum Rettungshaus teleportiert.',
                 modalLangBtn: 'English',
                 welcomeTitle: 'Willkommen in der Smaragdschlucht',
                 welcomeSub: 'Tropische Berge, tiefe grüne Schluchten & gewundene Flüsse',
@@ -463,8 +463,10 @@
         };
 
         // --- World & Physics Constants ---
-        const WORLD_SIZE = 380;
-        const TERRAIN_SEGMENTS = 190; // High-resolution 190x190 terrain mesh for crisp gorge cliffs
+        const WORLD_SIZE = 620;
+        const TERRAIN_SEGMENTS = 248; // High-resolution 248x248 terrain mesh for crisp gorge cliffs
+        const HOUSE_POS = { x: 115, z: 145, y: 18.0 };
+        const HOUSE_SPAWN = { x: HOUSE_POS.x, z: HOUSE_POS.z + 6.0 };
         const WATER_LEVEL = 0.0;
         const GRAVITY = -26.0;
         const GLIDE_GRAVITY = -4.2;
@@ -696,29 +698,39 @@
             elevation += peak1 + peak2 + peak3 + peak4;
 
             // Gentle outer rim containment so the player stays inside a natural basin
-            if (radialDist > 145) {
-                elevation += (radialDist - 145) * 0.55;
+            if (radialDist > 245) {
+                elevation += (radialDist - 245) * 0.55;
             }
 
             // Carve the turquoise river channel and steep green gorge walls
+            let finalHeight;
             if (distToRiver < 11.5) {
                 // Smooth riverbed below WATER_LEVEL (0.0)
                 const riverFactor = distToRiver / 11.5;
                 const bedDepth = -2.4 * (1.0 - riverFactor * riverFactor);
-                return bedDepth + microDetail * 0.15;
+                finalHeight = bedDepth + microDetail * 0.15;
             } else if (distToRiver < 24.0) {
                 // Riverbank & lower green gorge terrace
                 const t = (distToRiver - 11.5) / 12.5;
                 const smoothT = t * t * (3.0 - 2.0 * t);
                 const bankHeight = THREE.MathUtils.lerp(0.1, 7.5, smoothT);
-                return bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
+                finalHeight = bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
             } else {
                 // Steep gorge walls transitioning into highlands & mountains
                 const wallT = THREE.MathUtils.smoothstep(distToRiver, 24.0, 52.0);
                 // Add subtle rocky cliff ledges along gorge walls
                 const ledge = Math.sin(elevation * 0.65) * 0.45 * wallT;
-                return THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
+                finalHeight = THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
             }
+
+            // Flatten a scenic plateau for the Respawn Sanctuary House
+            const distToHouse = Math.hypot(x - HOUSE_POS.x, z - HOUSE_POS.z);
+            if (distToHouse < 16.0) {
+                const flatT = 1.0 - THREE.MathUtils.smoothstep(distToHouse, 8.0, 16.0);
+                finalHeight = THREE.MathUtils.lerp(finalHeight, HOUSE_POS.y, flatT);
+            }
+
+            return finalHeight;
         }
 
         /**
@@ -774,7 +786,7 @@
             scene.background = new THREE.Color(TIME_PRESETS[0].sky);
             scene.fog = new THREE.FogExp2(TIME_PRESETS[0].fog, TIME_PRESETS[0].fogDensity);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 560);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 900);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -804,8 +816,8 @@
             sunLight.shadow.mapSize.width = 2048;
             sunLight.shadow.mapSize.height = 2048;
             sunLight.shadow.camera.near = 10;
-            sunLight.shadow.camera.far = 380;
-            const d = 150;
+            sunLight.shadow.camera.far = 550;
+            const d = 220;
             sunLight.shadow.camera.left = -d;
             sunLight.shadow.camera.right = d;
             sunLight.shadow.camera.top = d;
@@ -817,6 +829,7 @@
             buildTerrain();
             buildWater();
             buildBaseCampAndBridge();
+            buildRespawnHouse();
             buildCrocodiles();
             buildTropicalFlora();
             buildWaterfalls();
@@ -1040,6 +1053,78 @@
         }
 
         /**
+         * Builds the Sanctuary House on an elevated plateau where the player is
+         * teleported if snapped by a river crocodile.
+         */
+        function buildRespawnHouse() {
+            const houseGroup = new THREE.Group();
+            houseGroup.position.set(HOUSE_POS.x, HOUSE_POS.y, HOUSE_POS.z);
+
+            const stoneMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9, flatShading: true });
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.85, flatShading: true });
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.88, flatShading: true });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.78, flatShading: true });
+            const windowMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+
+            // Stone foundation & front porch deck
+            const foundation = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.7, 7.6), stoneMat);
+            foundation.position.set(0, 0.2, 0.4);
+            foundation.receiveShadow = true;
+            foundation.castShadow = true;
+            houseGroup.add(foundation);
+
+            const porch = new THREE.Mesh(new THREE.BoxGeometry(6.0, 0.25, 2.2), woodMat);
+            porch.position.set(0, 0.55, 3.8);
+            porch.receiveShadow = true;
+            houseGroup.add(porch);
+
+            // Main cabin walls
+            const walls = new THREE.Mesh(new THREE.BoxGeometry(6.8, 3.6, 5.4), wallMat);
+            walls.position.set(0, 2.35, -0.2);
+            walls.castShadow = true;
+            walls.receiveShadow = true;
+            houseGroup.add(walls);
+
+            // Pitched pyramid roof
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(5.6, 2.8, 4), roofMat);
+            roof.position.set(0, 5.55, -0.2);
+            roof.rotation.y = Math.PI / 4;
+            roof.castShadow = true;
+            houseGroup.add(roof);
+
+            // Stone chimney
+            const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.85, 2.2, 0.85), stoneMat);
+            chimney.position.set(1.9, 5.4, -1.3);
+            chimney.castShadow = true;
+            houseGroup.add(chimney);
+
+            // Wooden front door facing +Z (towards spawn)
+            const door = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.3, 0.18), woodMat);
+            door.position.set(0, 1.7, 2.52);
+            houseGroup.add(door);
+
+            // Glowing warm windows
+            [
+                [-1.9, 2.3, 2.52, 0],
+                [1.9, 2.3, 2.52, 0],
+                [-3.42, 2.3, -0.2, Math.PI / 2],
+                [3.42, 2.3, -0.2, Math.PI / 2]
+            ].forEach(([wx, wy, wz, ry]) => {
+                const win = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.9, 0.14), windowMat);
+                win.position.set(wx, wy, wz);
+                win.rotation.y = ry;
+                houseGroup.add(win);
+            });
+
+            // Porch lantern light
+            const lantern = new THREE.PointLight(0xfbbf24, 2.2, 24);
+            lantern.position.set(0, 3.1, 3.5);
+            houseGroup.add(lantern);
+
+            scene.add(houseGroup);
+        }
+
+        /**
          * Computes the solid deck height of the wooden suspension bridge at (x, z),
          * or returns -Infinity if the player is not above the bridge planks.
          */
@@ -1060,13 +1145,13 @@
          * and snap at the player when they enter the water.
          */
         function buildCrocodiles() {
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1e3a1e, roughness: 0.78, flatShading: true });
-            const bellyMat = new THREE.MeshStandardMaterial({ color: 0x657c4a, roughness: 0.85, flatShading: true });
-            const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x112411, roughness: 0.7, flatShading: true });
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.78, flatShading: true });
+            const bellyMat = new THREE.MeshStandardMaterial({ color: 0xf87171, roughness: 0.85, flatShading: true });
+            const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x7f1d1d, roughness: 0.7, flatShading: true });
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
             const toothMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
 
-            const crocZones = [-95, -55, -18, 16, 66, 98];
+            const crocZones = [-210, -155, -95, -55, -18, 16, 66, 98, 155, 210];
 
             crocZones.forEach((baseZ, idx) => {
                 const croc = new THREE.Group();
@@ -1138,6 +1223,7 @@
                 });
 
                 const startX = getRiverCenterX(baseZ);
+                croc.scale.setScalar(1.65);
                 croc.position.set(startX, WATER_LEVEL - 0.05, baseZ);
                 scene.add(croc);
 
@@ -1218,14 +1304,14 @@
                 }
 
                 // Catch & eat player if within bite range!
-                if (c.chasing && distToPlayer < 1.95 && crocCooldown <= 0) {
+                if (c.chasing && distToPlayer < 2.5 && crocCooldown <= 0) {
                     crocCooldown = 3.0;
                     const t = I18N[currentLang];
                     spawnDiscoveryBurst(player.pos);
                     showDiscoveryToast(t.toastCrocTitle, t.toastCrocSub);
 
-                    // Respawn player safely back at Base Camp
-                    player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
+                    // Teleport player to the Sanctuary House
+                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
                     player.vel.set(0, 0, 0);
                     player.inWater = false;
                     player.gliding = false;
@@ -1246,15 +1332,16 @@
             const fernMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.75, flatShading: true });
             const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9, flatShading: true });
 
-            for (let i = 0; i < 290; i++) {
+            for (let i = 0; i < 600; i++) {
                 const rx = (hash2D(i * 3.1, 1.7) - 0.5) * (WORLD_SIZE * 0.82);
                 const rz = (hash2D(2.3, i * 4.7) - 0.5) * (WORLD_SIZE * 0.82);
                 const ry = getTerrainHeight(rx, rz);
                 const slope = getTerrainSlope(rx, rz);
 
-                // Keep river channel, base camp, and bridge deck clear
+                // Keep river channel, base camp, respawn house, and bridge deck clear
                 if (ry < WATER_LEVEL + 0.6 || slope > 0.78) continue;
                 if (Math.hypot(rx - 16, rz - 53) < 9.5) continue;
+                if (Math.hypot(rx - HOUSE_POS.x, rz - HOUSE_POS.z) < 12.0) continue;
                 if (Math.abs(rx - getRiverCenterX(40)) < 19 && Math.abs(rz - 40) < 4.5) continue;
 
                 const variant = hash2D(i * 7.3, i * 2.9);
