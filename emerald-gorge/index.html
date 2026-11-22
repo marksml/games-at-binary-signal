@@ -209,6 +209,20 @@
         </div>
     </div>
 
+    <!-- Active Sky Ring Boost Chain Pill (Visible while chaining rings) -->
+    <div id="chain-pill" class="fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none opacity-0 scale-95 transition-all duration-200">
+        <div class="hud-glass rounded-2xl px-4 py-2 border-amber-300/60 shadow-xl flex flex-col items-center gap-1 min-w-[190px]">
+            <div class="flex items-center gap-2 text-xs font-extrabold tracking-wide text-amber-200">
+                <span>⚡</span>
+                <span id="chain-label">Sky Ring Chain</span>
+                <span id="chain-count" class="font-display text-base text-emerald-300">x1</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-emerald-950/80 overflow-hidden">
+                <div id="chain-bar" class="h-full rounded-full bg-gradient-to-r from-amber-300 via-emerald-300 to-cyan-300" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Action Controls Row (Centered outside main view focus) -->
     <footer class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none w-full max-w-2xl px-3 flex justify-center">
         <div class="hud-glass rounded-2xl p-1.5 sm:p-2 pointer-events-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
@@ -314,9 +328,14 @@
         <div class="hud-glass rounded-3xl max-w-md w-full p-7 text-center border-amber-300/50 shadow-2xl">
             <div class="text-5xl mb-3">🏆🌴✨</div>
             <h2 id="victory-title" class="font-display font-extrabold text-2xl sm:text-3xl text-amber-200 mb-2">Master of Emerald Gorge!</h2>
-            <p id="victory-desc" class="text-sm text-emerald-100/90 leading-relaxed mb-6">
+            <p id="victory-desc" class="text-sm text-emerald-100/90 leading-relaxed mb-4">
                 You have explored the tropical mountains, crossed the winding gorge river, and awakened all 8 Ancient Emerald Relics! You may continue gliding and exploring the valley freely.
             </p>
+            <div id="victory-chain-stat" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-950/60 border border-amber-300/35 text-xs font-bold text-amber-200 mb-5">
+                <span>⚡</span>
+                <span id="victory-chain-label">Best Sky Ring Chain:</span>
+                <span id="victory-chain-value" class="text-emerald-300 font-extrabold">0</span>
+            </div>
             <div class="flex gap-3 justify-center">
                 <button id="btn-continue" class="game-btn rounded-xl px-5 py-3 font-bold text-sm text-white cursor-pointer">
                     Keep Exploring
@@ -356,9 +375,14 @@
                 },
                 status: {
                     gliding: '🪂 Gliding',
+                    updraft: '🌪️ Updraft',
+                    boosting: '⚡ Boost',
+                    geyser: '🌋 Geyser Launch!',
                     swimming: '🏊 Swimming',
                     exploring: '🥾 Exploring'
                 },
+                chainLabel: 'Sky Ring Chain',
+                bestChainLabel: 'Best Sky Ring Chain:',
                 timeNames: ['Noon', 'Sunset', 'Dawn Mist'],
                 cam3rd: '3rd Person',
                 cam1st: '1st Person',
@@ -368,36 +392,45 @@
                 touchSprint: 'Sprint',
                 touchGlide: 'Jump/Glide',
                 toastDiscovered: 'Relic Discovered!',
+                toastChallenge: 'Ancient Mechanism',
                 toastCampTitle: 'Returned to Valley Camp',
                 toastCampSub: 'Ready for a new expedition',
                 toastCrocTitle: '🐊 Snapped by a Crocodile!',
                 toastCrocSub: 'Watch out when swimming in the river! Returned to Camp.',
+                toastTotemTitle: 'Ancient Totem Activated',
+                toastTotemSub: 'Sanctuary stones awakened',
+                toastSanctuaryOpenTitle: 'Sanctuary Unsealed!',
+                toastSanctuaryOpenSub: 'The golden barrier around the relic has shattered',
+                toastSanctuaryLockedTitle: 'Sanctuary Barrier Sealed',
+                toastSanctuaryLockedSub: 'Step on all 3 glowing pressure totems around the plateau',
+                toastGeyserTitle: '🌋 Volcanic Geyser Eruption!',
+                toastGeyserSub: 'Hold Space at the apex to glide onto the Volcanic Spire',
                 modalLangBtn: 'Deutsch',
                 welcomeTitle: 'Welcome to Emerald Gorge',
                 welcomeSub: 'Lush Tropical Mountains, Deep Green Gorges & Winding Rivers',
-                welcomeDesc: 'Roam freely through a sunlit tropical wilderness. Climb misty volcanic peaks, swim across the turquoise canyon river, and leap from high cliffs to deploy your <strong class="text-amber-200">canopy glider</strong>. Follow the glowing sky beams and compass to uncover all <strong class="text-emerald-300">8 Ancient Emerald Relics</strong>.',
+                welcomeDesc: 'Roam freely across an expansive tropical wilderness. Discover a <strong class="text-cyan-200">secret grotto behind the waterfalls</strong>, hop across crocodile-guarded river stones, launch off a <strong class="text-amber-200">volcanic geyser</strong>, and awaken ancient totems to claim all <strong class="text-emerald-300">8 Ancient Emerald Relics</strong>.',
                 ctrlMoveTitle: '🚶 Movement',
                 ctrlMoveDesc: '<strong>WASD</strong> or <strong>Arrow Keys</strong> to walk & swim. Hold <strong>Shift</strong> to sprint.',
-                ctrlGlideTitle: '🪂 Jump & Glide',
-                ctrlGlideDesc: 'Press <strong>Space</strong> to jump. Hold <strong>Space</strong> in mid-air to glide across gorges!',
+                ctrlGlideTitle: '🪂 Jump, Glide & Updrafts',
+                ctrlGlideDesc: 'Press <strong>Space</strong> to jump & hold in mid-air to glide. Ride <strong>thermal updrafts</strong> upward and chain <strong>sky rings</strong> for speed bursts!',
                 ctrlCamTitle: '🎥 Camera Control',
                 ctrlCamDesc: '<strong>Click & Drag</strong> (or touch drag) to orbit the camera. <strong>Scroll</strong> to zoom.',
-                ctrlGoalTitle: '💎 Exploration Goal',
-                ctrlGoalDesc: 'Follow the <strong>compass arrow</strong> & glowing emerald beacons to collect all 8 relics.',
+                ctrlGoalTitle: '💎 Relics & Secrets',
+                ctrlGoalDesc: 'Follow the <strong>compass arrow</strong> to solve ancient totems, find hidden grottos, and collect all 8 relics.',
                 startBtn: 'Begin Exploration 🌴',
                 victoryTitle: 'Master of Emerald Gorge!',
-                victoryDesc: 'You have explored the tropical mountains, crossed the winding gorge river, and awakened all 8 Ancient Emerald Relics! You may continue gliding and exploring the valley freely.',
+                victoryDesc: 'You have conquered the volcanic geyser, unlocked the southern sanctuary, crossed the crocodile rapids, and awakened all 8 Ancient Emerald Relics!',
                 continueBtn: 'Keep Exploring',
                 replayBtn: 'Reset Relics',
                 relics: [
                     { name: 'Riverbend Cove', desc: 'Hidden along the warm turquoise sandbar' },
                     { name: 'Emerald Gorge Overlook', desc: 'Perched above the winding canyon walls' },
-                    { name: 'Misty Falls Basin', desc: 'Shrouded in cool tropical waterfall spray' },
+                    { name: 'Misty Falls Grotto', desc: 'Tucked inside a secret glowing alcove behind the waterfall' },
                     { name: 'Canopy Hollow', desc: 'Deep within the sunlit rainforest grove' },
                     { name: 'Twin Peaks Ridge', desc: 'High atop the western emerald mountain' },
-                    { name: 'Sunlit Gorge Crossing', desc: 'Guarding the northern river passage' },
-                    { name: 'Volcanic Spire', desc: 'Crowning the northeastern highland summit' },
-                    { name: 'Southern Sanctuary', desc: 'A tranquil plateau overlooking the valley' }
+                    { name: 'Sunlit Gorge Crossing', desc: 'Guarded by crocodiles atop mossy river stepping stones' },
+                    { name: 'Volcanic Spire', desc: 'Crowning the sheer summit — ride the volcanic geyser below' },
+                    { name: 'Southern Sanctuary', desc: 'Sealed ruin plateau — activate 3 ancient pressure totems' }
                 ]
             },
             de: {
@@ -416,9 +449,14 @@
                 },
                 status: {
                     gliding: '🪂 Gleitflug',
+                    updraft: '🌪️ Aufwind',
+                    boosting: '⚡ Schub',
+                    geyser: '🌋 Geysir-Schub!',
                     swimming: '🏊 Schwimmen',
                     exploring: '🥾 Erkunden'
                 },
+                chainLabel: 'Himmelsring-Serie',
+                bestChainLabel: 'Beste Himmelsring-Serie:',
                 timeNames: ['Mittag', 'Abendrot', 'Morgennebel'],
                 cam3rd: '3. Person',
                 cam1st: '1. Person',
@@ -428,43 +466,52 @@
                 touchSprint: 'Sprinten',
                 touchGlide: 'Sprung/Gleiten',
                 toastDiscovered: 'Relikt entdeckt!',
+                toastChallenge: 'Uralter Mechanismus',
                 toastCampTitle: 'Zurück im Basislager',
                 toastCampSub: 'Bereit für eine neue Expedition',
                 toastCrocTitle: '🐊 Vom Krokodil geschnappt!',
                 toastCrocSub: 'Pass im Fluss auf! Du wurdest ins Basislager gerettet.',
+                toastTotemTitle: 'Uraltes Totem aktiviert',
+                toastTotemSub: 'Steine des Heiligtums erwachen',
+                toastSanctuaryOpenTitle: 'Heiligtum entsiegelt!',
+                toastSanctuaryOpenSub: 'Die goldene Barriere um das Relikt ist zerbrochen',
+                toastSanctuaryLockedTitle: 'Heiligtum versiegelt',
+                toastSanctuaryLockedSub: 'Tritt auf alle 3 leuchtenden Druck-Totems auf dem Plateau',
+                toastGeyserTitle: '🌋 Vulkan-Geysir-Ausbruch!',
+                toastGeyserSub: 'Halte Leertaste am höchsten Punkt für den Gleitflug zum Gipfel',
                 modalLangBtn: 'English',
                 welcomeTitle: 'Willkommen in der Smaragdschlucht',
                 welcomeSub: 'Tropische Berge, tiefe grüne Schluchten & gewundene Flüsse',
-                welcomeDesc: 'Erkunde frei eine sonnendurchflutete tropische Wildnis. Erklimme neblige Vulkangipfel, durchschwimme den türkisfarbenen Schluchtfluss und springe von hohen Klippen, um deinen <strong class="text-amber-200">Blätter-Gleiter</strong> zu öffnen. Folge den leuchtenden Lichtsäulen und dem Kompass, um alle <strong class="text-emerald-300">8 Uralten Smaragd-Relikte</strong> zu finden.',
+                welcomeDesc: 'Erkunde eine weitläufige tropische Wildnis. Entdecke eine <strong class="text-cyan-200">geheime Grotte hinter dem Wasserfall</strong>, hüpfe über krokodilbewachte Flusssteine, starte von einem <strong class="text-amber-200">Vulkan-Geysir</strong> und aktiviere uralte Totems für alle <strong class="text-emerald-300">8 Uralten Smaragd-Relikte</strong>.',
                 ctrlMoveTitle: '🚶 Bewegung',
                 ctrlMoveDesc: '<strong>WASD</strong> oder <strong>Pfeiltasten</strong> zum Laufen & Schwimmen. <strong>Shift</strong> zum Sprinten.',
-                ctrlGlideTitle: '🪂 Springen & Gleiten',
-                ctrlGlideDesc: '<strong>Leertaste</strong> zum Springen. In der Luft <strong>Leertaste halten</strong>, um über Schluchten zu gleiten!',
+                ctrlGlideTitle: '🪂 Gleiten & Aufwinde',
+                ctrlGlideDesc: '<strong>Leertaste</strong> zum Springen & in der Luft halten zum Gleiten. Nutze <strong>Aufwinde</strong> nach oben und kette <strong>Himmelsringe</strong> für Tempo-Schübe!',
                 ctrlCamTitle: '🎥 Kamera-Steuerung',
                 ctrlCamDesc: '<strong>Klicken & Ziehen</strong> (oder wischen) zum Drehen. <strong>Mausrad</strong> zum Zoomen.',
-                ctrlGoalTitle: '💎 Entdecker-Ziel',
-                ctrlGoalDesc: 'Folge dem <strong>Kompasspfeil</strong> und den grünen Lichtsäulen zu allen 8 Relikten.',
+                ctrlGoalTitle: '💎 Relikte & Geheimnisse',
+                ctrlGoalDesc: 'Folge dem <strong>Kompasspfeil</strong>, löse uralte Totems, finde versteckte Grotten und sammle alle 8 Relikte.',
                 startBtn: 'Erkundung starten 🌴',
                 victoryTitle: 'Meister der Smaragdschlucht!',
-                victoryDesc: 'Du hast die tropischen Berge erkundet, den Schluchtfluss überquert und alle 8 Uralten Smaragd-Relikte erweckt! Du kannst das Tal nun frei weiter erkunden und darüber hinweggleiten.',
+                victoryDesc: 'Du hast den Vulkan-Geysir bezwungen, das südliche Heiligtum entsiegelt, die Krokodil-Stromschnellen überquert und alle 8 Uralten Smaragd-Relikte erweckt!',
                 continueBtn: 'Weiter erkunden',
                 replayBtn: 'Relikte zurücksetzen',
                 relics: [
                     { name: 'Flussbiegung-Bucht', desc: 'Versteckt an der warmen türkisfarbenen Sandbank' },
                     { name: 'Smaragdschlucht-Klippe', desc: 'Hoch über den gewundenen Felswänden' },
-                    { name: 'Nebelfall-Becken', desc: 'Eingehüllt in kühle tropische Wasserfall-Gischt' },
+                    { name: 'Nebelfall-Grotte', desc: 'Versteckt in einer leuchtenden Grotte hinter dem Wasserfall' },
                     { name: 'Urwald-Lichtung', desc: 'Tief im sonnigen Regenwaldhain' },
                     { name: 'Zwillingsgipfel-Grat', desc: 'Hoch oben auf dem westlichen Smaragdberg' },
-                    { name: 'Sonnige Flussfurt', desc: 'Wächter der nördlichen Flusspassage' },
-                    { name: 'Vulkanspitze', desc: 'Krönt den nordöstlichen Hochlandgipfel' },
-                    { name: 'Südliches Heiligtum', desc: 'Ein ruhiges Hochplateau über dem Tal' }
+                    { name: 'Sonnige Flussfurt', desc: 'Von Krokodilen bewacht auf bemoosten Fluss-Trittsteinen' },
+                    { name: 'Vulkanspitze', desc: 'Krönt den steilen Gipfel — nutze den Vulkan-Geysir darunter' },
+                    { name: 'Südliches Heiligtum', desc: 'Versiegelte Ruine — aktiviere 3 uralte Druck-Totems' }
                 ]
             }
         };
 
         // --- World & Physics Constants ---
-        const WORLD_SIZE = 380;
-        const TERRAIN_SEGMENTS = 190; // High-resolution 190x190 terrain mesh for crisp gorge cliffs
+        const WORLD_SIZE = 520;
+        const TERRAIN_SEGMENTS = 230; // High-resolution 230x230 terrain mesh for expanded gorge cliffs
         const WATER_LEVEL = 0.0;
         const GRAVITY = -26.0;
         const GLIDE_GRAVITY = -4.2;
@@ -476,12 +523,22 @@
         let terrainMesh, waterMesh, waterGeometry;
         let playerGroup, leftLeg, rightLeg, leftArm, rightArm, gliderMesh, waterRippleRing;
         let bridgeCollider = null;
+        let supportPlatforms = [];
         let crocodiles = [];
         let crocCooldown = 0;
         let relics = [];
         let clouds = [];
         let birds = [];
         let waterfalls = [];
+        let updrafts = [];
+        let skyRings = [];
+        let pressureTotems = [];
+        let sanctuaryBarrier = null;
+        let sanctuaryUnlocked = false;
+        let sanctuaryHintCooldown = 0;
+        let volcanicGeyser = null;
+        let geyserCooldown = 0;
+        let grottoLight = null;
         let mistParticles = [];
         let fireflies = [];
         let swayingFoliage = [];
@@ -491,7 +548,7 @@
         let timeOfDayIndex = 0;
         let soundEnabled = false;
         let audioReady = false;
-        let windNoise, windFilter, chimeSynth;
+        let windNoise, windFilter, chimeSynth, ringSynth, boostNoise, boostFilter, totemSynth, geyserNoise, geyserFilter;
 
         // Player state
         const player = {
@@ -501,6 +558,12 @@
             onGround: false,
             inWater: false,
             gliding: false,
+            inUpdraft: false,
+            boostTimer: 0,
+            geyserLaunchTimer: 0,
+            ringChain: 0,
+            chainTimer: 0,
+            bestRingChain: 0,
             walkCycle: 0
         };
 
@@ -520,16 +583,16 @@
         // Active keyboard/touch inputs
         const keys = {};
 
-        // Time of day lighting presets
+        // Time of day lighting presets (tuned fog density for the expanded 520x520 valley)
         const TIME_PRESETS = [
             {
                 icon: '☀️',
                 sky: 0x5cc9e8,
                 fog: 0x8be2dc,
-                fogDensity: 0.0040,
+                fogDensity: 0.0031,
                 sunColor: 0xfff8e7,
                 sunIntensity: 1.5,
-                sunPos: [95, 145, 70],
+                sunPos: [120, 175, 90],
                 hemiSky: 0x87e8ff,
                 hemiGround: 0x1b5e38,
                 hemiIntensity: 0.78
@@ -538,10 +601,10 @@
                 icon: '🌅',
                 sky: 0xf4976c,
                 fog: 0xd98a6c,
-                fogDensity: 0.0048,
+                fogDensity: 0.0037,
                 sunColor: 0xff9e5e,
                 sunIntensity: 1.6,
-                sunPos: [-120, 48, -90],
+                sunPos: [-150, 56, -110],
                 hemiSky: 0xffb38a,
                 hemiGround: 0x1a3c2f,
                 hemiIntensity: 0.68
@@ -550,10 +613,10 @@
                 icon: '🌫️',
                 sky: 0x66a5ad,
                 fog: 0x7bc2be,
-                fogDensity: 0.0062,
+                fogDensity: 0.0048,
                 sunColor: 0xd9f7f0,
                 sunIntensity: 1.15,
-                sunPos: [110, 55, -80],
+                sunPos: [140, 66, -100],
                 hemiSky: 0xa7f3d0,
                 hemiGround: 0x0f3d2e,
                 hemiIntensity: 0.80
@@ -598,6 +661,8 @@
 
             document.getElementById('victory-title').textContent = t.victoryTitle;
             document.getElementById('victory-desc').textContent = t.victoryDesc;
+            document.getElementById('victory-chain-label').textContent = t.bestChainLabel;
+            document.getElementById('chain-label').textContent = t.chainLabel;
             document.getElementById('btn-continue').textContent = t.continueBtn;
             document.getElementById('btn-replay').textContent = t.replayBtn;
 
@@ -688,37 +753,48 @@
             const mountainMask = THREE.MathUtils.smoothstep(distToRiver, 18, 95);
             let elevation = (macro * 32.0 + ridges * 30.0) * mountainMask + microDetail;
 
-            // Towering signature peaks in corners & ridges
-            const peak1 = Math.exp(-((x + 86) ** 2 + (z + 64) ** 2) / 1450) * 32;
-            const peak2 = Math.exp(-((x - 84) ** 2 + (z + 82) ** 2) / 1600) * 36;
-            const peak3 = Math.exp(-((x - 64) ** 2 + (z - 102) ** 2) / 1500) * 28;
-            const peak4 = Math.exp(-((x + 92) ** 2 + (z - 75) ** 2) / 1700) * 30;
+            // Towering signature peaks across the expanded 520x520 valley
+            const peak1 = Math.exp(-((x + 118) ** 2 + (z + 88) ** 2) / 2100) * 36;    // Twin Peaks Ridge (NW)
+            const peak2 = Math.exp(-((x - 115) ** 2 + (z + 112) ** 2) / 1500) * 52;   // Steep Volcanic Spire (NE)
+            const peak3 = Math.exp(-((x - 88) ** 2 + (z - 138) ** 2) / 3100) * 30;    // Broad Southern Sanctuary Plateau (SE)
+            const peak4 = Math.exp(-((x + 118) ** 2 + (z - 98) ** 2) / 2200) * 33;    // SW Highlands
             elevation += peak1 + peak2 + peak3 + peak4;
 
             // Gentle outer rim containment so the player stays inside a natural basin
-            if (radialDist > 145) {
-                elevation += (radialDist - 145) * 0.55;
+            if (radialDist > 205) {
+                elevation += (radialDist - 205) * 0.55;
             }
 
             // Carve the turquoise river channel and steep green gorge walls
+            let h;
             if (distToRiver < 11.5) {
                 // Smooth riverbed below WATER_LEVEL (0.0)
                 const riverFactor = distToRiver / 11.5;
                 const bedDepth = -2.4 * (1.0 - riverFactor * riverFactor);
-                return bedDepth + microDetail * 0.15;
+                h = bedDepth + microDetail * 0.15;
             } else if (distToRiver < 24.0) {
                 // Riverbank & lower green gorge terrace
                 const t = (distToRiver - 11.5) / 12.5;
                 const smoothT = t * t * (3.0 - 2.0 * t);
                 const bankHeight = THREE.MathUtils.lerp(0.1, 7.5, smoothT);
-                return bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
+                h = bankHeight + elevation * (smoothT * 0.35) + microDetail * 0.35;
             } else {
                 // Steep gorge walls transitioning into highlands & mountains
                 const wallT = THREE.MathUtils.smoothstep(distToRiver, 24.0, 52.0);
                 // Add subtle rocky cliff ledges along gorge walls
                 const ledge = Math.sin(elevation * 0.65) * 0.45 * wallT;
-                return THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
+                h = THREE.MathUtils.lerp(7.5, elevation + 6.5, wallT) + ledge;
             }
+
+            // Carve a recessed flat grotto ledge behind the eastern waterfall at z = -24
+            const grottoX = getRiverCenterX(-24) + 17.2;
+            const distToGrotto = Math.hypot(x - grottoX, z + 24);
+            if (distToGrotto < 10.5) {
+                const gBlend = 1.0 - THREE.MathUtils.smoothstep(distToGrotto, 5.2, 10.5);
+                h = THREE.MathUtils.lerp(h, WATER_LEVEL + 1.55, gBlend);
+            }
+
+            return h;
         }
 
         /**
@@ -774,7 +850,7 @@
             scene.background = new THREE.Color(TIME_PRESETS[0].sky);
             scene.fog = new THREE.FogExp2(TIME_PRESETS[0].fog, TIME_PRESETS[0].fogDensity);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 560);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 760);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -804,8 +880,8 @@
             sunLight.shadow.mapSize.width = 2048;
             sunLight.shadow.mapSize.height = 2048;
             sunLight.shadow.camera.near = 10;
-            sunLight.shadow.camera.far = 380;
-            const d = 150;
+            sunLight.shadow.camera.far = 520;
+            const d = 215;
             sunLight.shadow.camera.left = -d;
             sunLight.shadow.camera.right = d;
             sunLight.shadow.camera.top = d;
@@ -820,6 +896,9 @@
             buildCrocodiles();
             buildTropicalFlora();
             buildWaterfalls();
+            buildRelicChallenges();
+            buildThermalUpdrafts();
+            buildSkyRings();
             buildCloudsBirdsAndFireflies();
             buildPlayer();
             buildRelics();
@@ -850,6 +929,7 @@
                 const slope = getTerrainSlope(x, z);
                 const noiseTint = (fbm(x * 0.07, z * 0.07, 3) - 0.5) * 0.09;
                 const mossPatch = valueNoise(x * 0.14 + 4.2, z * 0.14 + 1.9);
+                const distToVolcano = Math.hypot(x - 115, z + 112);
 
                 if (y < WATER_LEVEL - 0.7) {
                     // Turquoise riverbed with warm pebbles
@@ -857,6 +937,10 @@
                 } else if (y < WATER_LEVEL + 1.2) {
                     // Golden tropical sandbar & river pebbles
                     c.setRGB(0.80 + noiseTint, 0.74 + noiseTint, 0.52);
+                } else if (distToVolcano < 40 && y > 34) {
+                    // Dark volcanic basalt & ember-tinted ash around the Volcanic Spire
+                    const ash = THREE.MathUtils.clamp((y - 34) / 28, 0, 1);
+                    c.setRGB(0.24 + noiseTint + ash * 0.05, 0.23 + noiseTint, 0.24 + noiseTint);
                 } else if (slope > 0.92) {
                     // Steep gorge cliff walls: layered mossy basalt & emerald lichen
                     const mossBlend = mossPatch > 0.55 ? 0.14 : 0.0;
@@ -1056,6 +1140,27 @@
         }
 
         /**
+         * Computes the highest solid support platform at (x, z) across the wooden
+         * suspension bridge, river stepping stones, grotto ledge, and sanctuary dais.
+         */
+        function getSupportPlatformHeight(x, z) {
+            let bestY = getBridgeDeckHeight(x, z);
+            for (let i = 0; i < supportPlatforms.length; i++) {
+                const p = supportPlatforms[i];
+                if (p.shape === 'circle') {
+                    if (Math.hypot(x - p.x, z - p.z) <= p.radius) {
+                        if (p.y > bestY) bestY = p.y;
+                    }
+                } else if (p.shape === 'rect') {
+                    if (Math.abs(x - p.x) <= p.halfW && Math.abs(z - p.z) <= p.halfD) {
+                        if (p.y > bestY) bestY = p.y;
+                    }
+                }
+            }
+            return bestY;
+        }
+
+        /**
          * Spawns 3D river crocodiles patrolling the turquoise canyon river that hunt
          * and snap at the player when they enter the water.
          */
@@ -1066,7 +1171,8 @@
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
             const toothMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
 
-            const crocZones = [-95, -55, -18, 16, 66, 98];
+            // 8 patrolling river crocodiles across the expanded river, including 2 guarding the Stepping-Stone Crossing (-128)
+            const crocZones = [-165, -137, -119, -76, -34, 14, 72, 132];
 
             crocZones.forEach((baseZ, idx) => {
                 const croc = new THREE.Group();
@@ -1229,6 +1335,10 @@
                     player.vel.set(0, 0, 0);
                     player.inWater = false;
                     player.gliding = false;
+                    player.inUpdraft = false;
+                    player.boostTimer = 0;
+                    player.ringChain = 0;
+                    player.chainTimer = 0;
                 }
             });
         }
@@ -1246,16 +1356,23 @@
             const fernMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.75, flatShading: true });
             const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9, flatShading: true });
 
-            for (let i = 0; i < 290; i++) {
-                const rx = (hash2D(i * 3.1, 1.7) - 0.5) * (WORLD_SIZE * 0.82);
-                const rz = (hash2D(2.3, i * 4.7) - 0.5) * (WORLD_SIZE * 0.82);
+            const grottoX = getRiverCenterX(-24) + 17.2;
+
+            for (let i = 0; i < 440; i++) {
+                const rx = (hash2D(i * 3.1, 1.7) - 0.5) * (WORLD_SIZE * 0.84);
+                const rz = (hash2D(2.3, i * 4.7) - 0.5) * (WORLD_SIZE * 0.84);
                 const ry = getTerrainHeight(rx, rz);
                 const slope = getTerrainSlope(rx, rz);
 
-                // Keep river channel, base camp, and bridge deck clear
+                // Keep river channel, base camp, camp updraft, bridge, and relic challenge arenas clear
                 if (ry < WATER_LEVEL + 0.6 || slope > 0.78) continue;
                 if (Math.hypot(rx - 16, rz - 53) < 9.5) continue;
+                if (Math.hypot(rx - (getRiverCenterX(48) - 11), rz - 48) < 6.5) continue;
                 if (Math.abs(rx - getRiverCenterX(40)) < 19 && Math.abs(rz - 40) < 4.5) continue;
+                if (Math.hypot(rx - grottoX, rz + 24) < 12.0) continue;           // Waterfall Grotto
+                if (Math.hypot(rx - 90, rz + 90) < 9.0) continue;                  // Volcanic Geyser Crater
+                if (Math.hypot(rx - 115, rz + 112) < 16.0) continue;               // Volcanic Spire Summit
+                if (Math.hypot(rx - 88, rz - 138) < 28.0) continue;                // Southern Sanctuary & Totems
 
                 const variant = hash2D(i * 7.3, i * 2.9);
 
@@ -1357,10 +1474,10 @@
          */
         function buildWaterfalls() {
             const fallCoords = [
-                { z: -72, side: 1 },
-                { z: -18, side: 1 },
-                { z: 18, side: -1 },
-                { z: 78, side: -1 }
+                { z: -106, side: 1, grottoCurtain: false },
+                { z: -24, side: 1, grottoCurtain: true }, // Secret Waterfall Grotto sits behind this cascade!
+                { z: 24, side: -1, grottoCurtain: false },
+                { z: 104, side: -1, grottoCurtain: false }
             ];
 
             const fallMat = new THREE.MeshStandardMaterial({
@@ -1369,7 +1486,7 @@
                 emissiveIntensity: 0.35,
                 roughness: 0.2,
                 transparent: true,
-                opacity: 0.82,
+                opacity: 0.78,
                 flatShading: true
             });
 
@@ -1381,9 +1498,9 @@
 
             fallCoords.forEach((fc, idx) => {
                 const riverX = getRiverCenterX(fc.z);
-                const topX = riverX + fc.side * 34;
-                const botX = riverX + fc.side * 9.5;
-                const topY = Math.max(16, getTerrainHeight(topX, fc.z));
+                const topX = riverX + fc.side * (fc.grottoCurtain ? 16.5 : 34);
+                const botX = riverX + fc.side * (fc.grottoCurtain ? 9.5 : 9.5);
+                const topY = fc.grottoCurtain ? 14.5 : Math.max(16, getTerrainHeight(topX, fc.z));
                 const botY = WATER_LEVEL;
 
                 const midX = (topX + botX) * 0.5;
@@ -1391,7 +1508,12 @@
                 const length = Math.hypot(topX - botX, topY - botY);
                 const angle = Math.atan2(botX - topX, topY - botY);
 
-                const cascade = new THREE.Mesh(new THREE.BoxGeometry(4.4, length + 2.5, 1.2), fallMat);
+                const width = fc.grottoCurtain ? 1.4 : 4.4;
+                const depth = fc.grottoCurtain ? 7.6 : 1.2;
+                const cascade = new THREE.Mesh(
+                    new THREE.BoxGeometry(fc.grottoCurtain ? width : 4.4, length + 2.5, depth),
+                    fallMat
+                );
                 cascade.position.set(midX, midY, fc.z);
                 cascade.rotation.z = -angle;
                 scene.add(cascade);
@@ -1417,6 +1539,545 @@
         }
 
         /**
+         * Builds all 4 Varied Relic Challenges & Secrets across the expanded map:
+         *  1. Secret Waterfall Grotto (behind the z = -24 eastern waterfall)
+         *  2. Stepping-Stone River Crossing (crocodile-guarded pillars at z = -128)
+         *  3. Volcanic Geyser Launch (steam crater at (90, -90) launching toward Volcanic Spire)
+         *  4. Southern Sanctuary Ruin & 3 Ancient Pressure Totems (at (88, 138))
+         */
+        function buildRelicChallenges() {
+            const darkStoneMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9, flatShading: true });
+            const mossyStoneMat = new THREE.MeshStandardMaterial({ color: 0x3f6252, roughness: 0.86, flatShading: true });
+            const volcanicMat = new THREE.MeshStandardMaterial({ color: 0x1e2028, roughness: 0.92, flatShading: true });
+            const crystalVeinMat = new THREE.MeshBasicMaterial({ color: 0x34d399 });
+
+            // ------------------------------------------------------------------
+            // 1. SECRET WATERFALL GROTTO (Relic #3 — behind eastern waterfall at z = -24)
+            // ------------------------------------------------------------------
+            const grottoZ = -24;
+            const grottoX = getRiverCenterX(grottoZ) + 17.2;
+            const grottoFloorY = WATER_LEVEL + 1.65;
+            const grottoGroup = new THREE.Group();
+            grottoGroup.position.set(grottoX, grottoFloorY, grottoZ);
+
+            // Walkable mossy stone cave floor slab
+            const floorSlab = new THREE.Mesh(new THREE.CylinderGeometry(5.6, 6.2, 0.7, 10), mossyStoneMat);
+            floorSlab.position.y = -0.35;
+            floorSlab.receiveShadow = true;
+            grottoGroup.add(floorSlab);
+            supportPlatforms.push({ shape: 'circle', x: grottoX, z: grottoZ, radius: 5.8, y: grottoFloorY });
+
+            // Recessed cave back wall, side buttresses, and overhanging rock roof
+            const backWall = new THREE.Mesh(new THREE.DodecahedronGeometry(5.2, 0), darkStoneMat);
+            backWall.scale.set(0.65, 1.45, 1.4);
+            backWall.position.set(4.8, 3.6, 0);
+            grottoGroup.add(backWall);
+
+            [-4.6, 4.6].forEach(sideZ => {
+                const wall = new THREE.Mesh(new THREE.DodecahedronGeometry(3.4, 0), darkStoneMat);
+                wall.scale.set(1.4, 1.5, 0.75);
+                wall.position.set(0.8, 3.0, sideZ);
+                grottoGroup.add(wall);
+            });
+
+            const roof = new THREE.Mesh(new THREE.DodecahedronGeometry(5.6, 0), darkStoneMat);
+            roof.scale.set(1.25, 0.55, 1.45);
+            roof.position.set(0.6, 7.6, 0);
+            roof.castShadow = true;
+            grottoGroup.add(roof);
+
+            // Glowing emerald cave crystal clusters visible as a hint through the waterfall curtain
+            [[-1.2, 0.7, -3.2], [2.4, 1.4, -2.5], [2.8, 1.1, 2.6], [-0.8, 0.6, 3.4]].forEach(([cx, cy, cz]) => {
+                const shard = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), crystalVeinMat);
+                shard.scale.set(0.65, 1.7, 0.65);
+                shard.position.set(cx, cy, cz);
+                shard.rotation.z = (cx > 0 ? 0.25 : -0.2);
+                grottoGroup.add(shard);
+            });
+
+            grottoLight = new THREE.PointLight(0x34d399, 2.4, 24);
+            grottoLight.position.set(0, 3.8, 0);
+            grottoGroup.add(grottoLight);
+
+            scene.add(grottoGroup);
+
+            // ------------------------------------------------------------------
+            // 2. STEPPING-STONE RIVER CROSSING (Relic #6 — crocodile rapids at z = -128)
+            // ------------------------------------------------------------------
+            const crossZ = -128;
+            const crossX = getRiverCenterX(crossZ);
+
+            // Central mossy island altar holding the relic
+            const centerTopY = WATER_LEVEL + 1.35;
+            const centerPillar = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.8, 4.2, 9), mossyStoneMat);
+            centerPillar.position.set(crossX, centerTopY - 2.1, crossZ);
+            centerPillar.castShadow = true;
+            centerPillar.receiveShadow = true;
+            scene.add(centerPillar);
+            supportPlatforms.push({ shape: 'circle', x: crossX, z: crossZ, radius: 3.4, y: centerTopY });
+
+            // 8 staggered mossy stepping stones leading from both riverbanks out to the center altar
+            const stoneSpecs = [
+                // West bank -> center
+                { dx: -10.8, dz: 1.6, r: 1.85, y: 0.75 },
+                { dx: -7.5, dz: -1.4, r: 1.75, y: 0.95 },
+                { dx: -4.6, dz: 1.3, r: 1.7, y: 1.12 },
+                // East bank -> center
+                { dx: 10.8, dz: -1.5, r: 1.85, y: 0.75 },
+                { dx: 7.5, dz: 1.6, r: 1.75, y: 0.95 },
+                { dx: 4.6, dz: -1.3, r: 1.7, y: 1.12 },
+                // Bonus northern / southern jump stones
+                { dx: -1.8, dz: -4.4, r: 1.6, y: 0.85 },
+                { dx: 2.0, dz: 4.4, r: 1.6, y: 0.85 }
+            ];
+
+            stoneSpecs.forEach(st => {
+                const sx = crossX + st.dx;
+                const sz = crossZ + st.dz;
+                const pillar = new THREE.Mesh(
+                    new THREE.CylinderGeometry(st.r, st.r * 1.22, 3.6, 7),
+                    mossyStoneMat
+                );
+                pillar.position.set(sx, WATER_LEVEL + st.y - 1.8, sz);
+                pillar.castShadow = true;
+                pillar.receiveShadow = true;
+                scene.add(pillar);
+
+                // Subtle moss cap rim
+                const cap = new THREE.Mesh(
+                    new THREE.CylinderGeometry(st.r * 0.92, st.r * 0.98, 0.16, 7),
+                    new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85, flatShading: true })
+                );
+                cap.position.set(sx, WATER_LEVEL + st.y - 0.04, sz);
+                scene.add(cap);
+
+                supportPlatforms.push({ shape: 'circle', x: sx, z: sz, radius: st.r + 0.35, y: WATER_LEVEL + st.y });
+            });
+
+            // ------------------------------------------------------------------
+            // 3. VOLCANIC GEYSER LAUNCH (at (90, -90) launching toward Volcanic Spire (115, -112))
+            // ------------------------------------------------------------------
+            const geyserX = 90;
+            const geyserZ = -90;
+            const geyserY = getTerrainHeight(geyserX, geyserZ);
+            const geyserGroup = new THREE.Group();
+            geyserGroup.position.set(geyserX, geyserY, geyserZ);
+
+            // Jagged volcanic crater ring
+            for (let r = 0; r < 10; r++) {
+                const ang = (r / 10) * Math.PI * 2;
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.15 + (r % 2) * 0.35, 0), volcanicMat);
+                rock.scale.set(1.1, 0.85, 1.1);
+                rock.position.set(Math.cos(ang) * 3.1, 0.35, Math.sin(ang) * 3.1);
+                rock.castShadow = true;
+                geyserGroup.add(rock);
+            }
+
+            // Glowing magma core vent
+            const ventCore = new THREE.Mesh(
+                new THREE.CylinderGeometry(2.1, 2.5, 0.4, 12),
+                new THREE.MeshBasicMaterial({ color: 0xf97316 })
+            );
+            ventCore.position.y = 0.05;
+            geyserGroup.add(ventCore);
+
+            const geyserLight = new THREE.PointLight(0xfb923c, 2.4, 24);
+            geyserLight.position.set(0, 2.4, 0);
+            geyserGroup.add(geyserLight);
+
+            // Rising translucent pressurized steam column + animated steam puffs
+            const jetMat = new THREE.MeshBasicMaterial({
+                color: 0xf8fafc,
+                transparent: true,
+                opacity: 0.24,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const steamJet = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.1, 16, 12, 1, true), jetMat);
+            steamJet.position.y = 8.0;
+            geyserGroup.add(steamJet);
+
+            const geyserPuffs = [];
+            const puffGeo = new THREE.DodecahedronGeometry(0.85, 0);
+            for (let p = 0; p < 7; p++) {
+                const pMat = new THREE.MeshBasicMaterial({ color: 0xf1f5f9, transparent: true, opacity: 0.55 });
+                const puff = new THREE.Mesh(puffGeo, pMat);
+                geyserGroup.add(puff);
+                geyserPuffs.push({ mesh: puff, mat: pMat, offset: p / 7 });
+            }
+
+            scene.add(geyserGroup);
+            volcanicGeyser = {
+                x: geyserX,
+                y: geyserY,
+                z: geyserZ,
+                radius: 3.6,
+                group: geyserGroup,
+                ventCore,
+                steamJet,
+                jetMat,
+                geyserLight,
+                puffs: geyserPuffs,
+                eruptionTimer: 0
+            };
+
+            // ------------------------------------------------------------------
+            // 4. SOUTHERN SANCTUARY RUIN & 3 ANCIENT PRESSURE TOTEMS (at (88, 138))
+            // ------------------------------------------------------------------
+            const sancX = 88;
+            const sancZ = 138;
+            const sancY = getTerrainHeight(sancX, sancZ);
+            const sancGroup = new THREE.Group();
+            sancGroup.position.set(sancX, sancY, sancZ);
+
+            // Circular stone sanctuary floor dais
+            const dais = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 5.4, 0.7, 12), mossyStoneMat);
+            dais.position.y = 0.1;
+            dais.receiveShadow = true;
+            sancGroup.add(dais);
+            supportPlatforms.push({ shape: 'circle', x: sancX, z: sancZ, radius: 4.9, y: sancY + 0.45 });
+
+            // 4 weathered sanctuary ruin columns framing the central relic
+            for (let c = 0; c < 4; c++) {
+                const ang = (c / 4) * Math.PI * 2 + Math.PI / 4;
+                const colH = 4.6 + (c % 2) * 1.1;
+                const col = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.52, colH, 6), darkStoneMat);
+                col.position.set(Math.cos(ang) * 4.2, colH * 0.5, Math.sin(ang) * 4.2);
+                col.castShadow = true;
+                sancGroup.add(col);
+            }
+
+            // Translucent golden-emerald Energy Barrier Dome sealing the relic until all 3 totems activate
+            const barrierMat = new THREE.MeshStandardMaterial({
+                color: 0xfbbf24,
+                emissive: 0xf59e0b,
+                emissiveIntensity: 0.45,
+                transparent: true,
+                opacity: 0.34,
+                roughness: 0.15,
+                metalness: 0.3,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const barrierMesh = new THREE.Mesh(new THREE.SphereGeometry(3.65, 18, 14), barrierMat);
+            barrierMesh.position.y = 2.6;
+            sancGroup.add(barrierMesh);
+
+            const barrierWire = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(3.7, 1),
+                new THREE.MeshBasicMaterial({ color: 0xfde68a, wireframe: true, transparent: true, opacity: 0.42 })
+            );
+            barrierWire.position.y = 2.6;
+            sancGroup.add(barrierWire);
+
+            scene.add(sancGroup);
+            sanctuaryBarrier = {
+                x: sancX,
+                y: sancY,
+                z: sancZ,
+                group: sancGroup,
+                mesh: barrierMesh,
+                wire: barrierWire,
+                mat: barrierMat
+            };
+
+            // 3 Ancient Pressure Totem Pads arranged ~20m around the sanctuary plateau
+            const totemAngles = [0.45, 2.55, 4.65];
+            totemAngles.forEach((ang, idx) => {
+                const dist = 20.0;
+                const tx = sancX + Math.cos(ang) * dist;
+                const tz = sancZ + Math.sin(ang) * dist;
+                const ty = getTerrainHeight(tx, tz);
+
+                const tGroup = new THREE.Group();
+                tGroup.position.set(tx, ty, tz);
+
+                // Stone base ring
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.5, 0.45, 8), darkStoneMat);
+                base.position.y = 0.12;
+                base.receiveShadow = true;
+                tGroup.add(base);
+
+                // Depressible glowing pressure plate
+                const plateMat = new THREE.MeshStandardMaterial({
+                    color: 0xf59e0b,
+                    emissive: 0xd97706,
+                    emissiveIntensity: 0.7,
+                    roughness: 0.3,
+                    flatShading: true
+                });
+                const plate = new THREE.Mesh(new THREE.CylinderGeometry(1.55, 1.65, 0.24, 8), plateMat);
+                plate.position.y = 0.4;
+                tGroup.add(plate);
+
+                // Small floating stone obelisk crystal hovering beside the pad so it's easy to spot
+                const obeliskMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+                const obelisk = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), obeliskMat);
+                obelisk.scale.set(0.75, 1.6, 0.75);
+                obelisk.position.y = 2.6;
+                tGroup.add(obelisk);
+
+                scene.add(tGroup);
+
+                // Faint energy tether beam connecting this totem directly to the Sanctuary dome
+                const startVec = new THREE.Vector3(tx, ty + 2.4, tz);
+                const endVec = new THREE.Vector3(sancX, sancY + 2.8, sancZ);
+                const beamLen = startVec.distanceTo(endVec);
+                const beamMid = new THREE.Vector3().addVectors(startVec, endVec).multiplyScalar(0.5);
+                const beamMat = new THREE.MeshBasicMaterial({
+                    color: 0xfbbf24,
+                    transparent: true,
+                    opacity: 0.22,
+                    depthWrite: false
+                });
+                const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, beamLen, 6), beamMat);
+                beam.position.copy(beamMid);
+                beam.quaternion.setFromUnitVectors(
+                    new THREE.Vector3(0, 1, 0),
+                    new THREE.Vector3().subVectors(endVec, startVec).normalize()
+                );
+                scene.add(beam);
+
+                pressureTotems.push({
+                    id: idx,
+                    x: tx,
+                    y: ty,
+                    z: tz,
+                    group: tGroup,
+                    plate,
+                    plateMat,
+                    obelisk,
+                    obeliskMat,
+                    beam,
+                    beamMat,
+                    activated: false
+                });
+            });
+        }
+
+        /**
+         * Builds rising Thermal Updraft wind columns near waterfalls and gorge valleys
+         * that lift the player's canopy glider upward to reach mountain ridges and sky rings.
+         */
+        function buildThermalUpdrafts() {
+            const updraftSpecs = [
+                // 4 Waterfall mist updrafts (aligned with expanded waterfall basins)
+                { x: getRiverCenterX(-106) + 8.5, z: -106, radius: 6.4, height: 36, waterBased: true },
+                { x: getRiverCenterX(-24) + 5.5, z: -24, radius: 5.8, height: 32, waterBased: true },
+                { x: getRiverCenterX(24) - 8.5, z: 24, radius: 6.4, height: 32, waterBased: true },
+                { x: getRiverCenterX(104) - 8.5, z: 104, radius: 6.4, height: 34, waterBased: true },
+                // 6 Strategic gorge & ridge updrafts across the expanded 520x520 valley
+                { x: getRiverCenterX(48) - 11, z: 48, radius: 6.4, height: 28, waterBased: false },  // Right beside Base Camp & Bridge!
+                { x: getRiverCenterX(-58), z: -58, radius: 6.8, height: 38, waterBased: true },       // Central Gorge Canyon
+                { x: getRiverCenterX(-96), z: -96, radius: 6.6, height: 36, waterBased: true },       // Northern Gorge -> Stepping Stones
+                { x: -72, z: -38, radius: 6.4, height: 36, waterBased: false },                       // Western Slopes -> Twin Peaks
+                { x: 68, z: -62, radius: 6.4, height: 36, waterBased: false },                        // Eastern Approach -> Volcanic Geyser
+                { x: 44, z: 96, radius: 6.4, height: 36, waterBased: false }                          // Southern Ridge -> Southern Sanctuary
+            ];
+
+            const columnMat = new THREE.MeshBasicMaterial({
+                color: 0xa5f3fc,
+                transparent: true,
+                opacity: 0.11,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+
+            const baseRingMat = new THREE.MeshBasicMaterial({
+                color: 0x6ee7b7,
+                transparent: true,
+                opacity: 0.34,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+
+            updraftSpecs.forEach((spec, idx) => {
+                const groundY = spec.waterBased
+                    ? WATER_LEVEL + 0.15
+                    : Math.max(WATER_LEVEL + 0.15, getTerrainHeight(spec.x, spec.z));
+                const group = new THREE.Group();
+                group.position.set(spec.x, groundY, spec.z);
+
+                // Translucent vertical air column
+                const colGeo = new THREE.CylinderGeometry(spec.radius * 0.72, spec.radius * 0.92, spec.height, 16, 1, true);
+                const column = new THREE.Mesh(colGeo, columnMat);
+                column.position.y = spec.height * 0.5;
+                group.add(column);
+
+                // Soft glowing mist ring at base
+                const baseRing = new THREE.Mesh(
+                    new THREE.RingGeometry(spec.radius * 0.48, spec.radius * 0.92, 24),
+                    baseRingMat
+                );
+                baseRing.rotation.x = -Math.PI / 2;
+                baseRing.position.y = 0.25;
+                group.add(baseRing);
+
+                // 5 rising wind hoops ascending from base to ceiling
+                const rings = [];
+                for (let r = 0; r < 5; r++) {
+                    const ringMat = new THREE.MeshBasicMaterial({
+                        color: r % 2 === 0 ? 0xe0f2fe : 0x6ee7b7,
+                        transparent: true,
+                        opacity: 0.45,
+                        depthWrite: false
+                    });
+                    const hoop = new THREE.Mesh(
+                        new THREE.TorusGeometry(spec.radius * 0.68, 0.09, 6, 20),
+                        ringMat
+                    );
+                    hoop.rotation.x = Math.PI / 2;
+                    group.add(hoop);
+                    rings.push({ mesh: hoop, mat: ringMat, offset: r / 5 });
+                }
+
+                // 4 rising vertical wind streaks swirling around the column
+                const streaks = [];
+                for (let s = 0; s < 4; s++) {
+                    const streakMat = new THREE.MeshBasicMaterial({
+                        color: 0xf0fdfa,
+                        transparent: true,
+                        opacity: 0.42,
+                        depthWrite: false
+                    });
+                    const streak = new THREE.Mesh(new THREE.BoxGeometry(0.14, 3.6, 0.14), streakMat);
+                    group.add(streak);
+                    streaks.push({
+                        mesh: streak,
+                        mat: streakMat,
+                        angleOffset: (s / 4) * Math.PI * 2,
+                        offset: (s * 0.25 + 0.12) % 1.0
+                    });
+                }
+
+                scene.add(group);
+                updrafts.push({
+                    x: spec.x,
+                    z: spec.z,
+                    baseY: groundY,
+                    topY: groundY + spec.height,
+                    height: spec.height,
+                    radius: spec.radius,
+                    group,
+                    baseRing,
+                    rings,
+                    streaks,
+                    phase: idx * 1.15
+                });
+            });
+        }
+
+        /**
+         * Builds 16 floating Sky Rings arranged along 3 scenic aerial glide routes
+         * that grant speed + altitude bursts and ascending chime chains when flown through.
+         */
+        function buildSkyRings() {
+            const routes = [
+                // Route A: Gorge Canyon Run (6 rings following the winding river north toward the Stepping-Stone Crossing)
+                [
+                    { x: getRiverCenterX(30) + 2, z: 30, minY: 16, clearance: 12 },
+                    { x: getRiverCenterX(2) - 2, z: 2, minY: 18, clearance: 12 },
+                    { x: getRiverCenterX(-28) + 2, z: -28, minY: 20, clearance: 12 },
+                    { x: getRiverCenterX(-58) - 1, z: -58, minY: 22, clearance: 12 },
+                    { x: getRiverCenterX(-88) + 2, z: -88, minY: 20, clearance: 12 },
+                    { x: getRiverCenterX(-116) - 2, z: -116, minY: 16, clearance: 11 }
+                ],
+                // Route B: Highland Crossing (6 rings arcing from Emerald Overlook across the gorge to Twin Peaks)
+                [
+                    { x: 68, z: 24, minY: 24, clearance: 11 },
+                    { x: 34, z: 6, minY: 24, clearance: 11 },
+                    { x: 0, z: -14, minY: 26, clearance: 12 },
+                    { x: -34, z: -32, minY: 28, clearance: 11 },
+                    { x: -68, z: -52, minY: 32, clearance: 11 },
+                    { x: -96, z: -72, minY: 38, clearance: 11 }
+                ],
+                // Route C: Southern Sanctuary Arc (6 rings looping from Southern Waterfall to Southern Sanctuary & back)
+                [
+                    { x: -24, z: 102, minY: 22, clearance: 12 },
+                    { x: 10, z: 110, minY: 24, clearance: 12 },
+                    { x: 42, z: 120, minY: 28, clearance: 11 },
+                    { x: 74, z: 130, minY: 36, clearance: 11 },
+                    { x: 76, z: 100, minY: 28, clearance: 11 },
+                    { x: 48, z: 72, minY: 22, clearance: 11 }
+                ]
+            ];
+
+            const outerGeo = new THREE.TorusGeometry(2.5, 0.16, 10, 28);
+            const innerGeo = new THREE.TorusGeometry(2.05, 0.065, 8, 24);
+            const gemGeo = new THREE.OctahedronGeometry(0.24, 0);
+
+            let globalIdx = 0;
+
+            routes.forEach(route => {
+                route.forEach((pt, idx) => {
+                    const groundY = Math.max(WATER_LEVEL, getTerrainHeight(pt.x, pt.z));
+                    const ringY = Math.max(pt.minY, groundY + pt.clearance);
+
+                    // Orient the ring opening along the flight path tangent
+                    const prev = route[Math.max(0, idx - 1)];
+                    const next = route[Math.min(route.length - 1, idx + 1)];
+                    const tangentYaw = Math.atan2(next.x - prev.x, next.z - prev.z);
+
+                    const group = new THREE.Group();
+                    group.position.set(pt.x, ringY, pt.z);
+                    group.rotation.y = tangentYaw;
+
+                    const outerMat = new THREE.MeshStandardMaterial({
+                        color: 0xfbbf24,
+                        emissive: 0xf59e0b,
+                        emissiveIntensity: 0.72,
+                        roughness: 0.22,
+                        metalness: 0.55,
+                        transparent: true,
+                        opacity: 0.96,
+                        flatShading: true
+                    });
+
+                    const innerMat = new THREE.MeshBasicMaterial({
+                        color: 0x6ee7b7,
+                        transparent: true,
+                        opacity: 0.65
+                    });
+
+                    const gemMat = new THREE.MeshBasicMaterial({
+                        color: 0xfef08a,
+                        transparent: true,
+                        opacity: 0.95
+                    });
+
+                    const outerRing = new THREE.Mesh(outerGeo, outerMat);
+                    const innerRing = new THREE.Mesh(innerGeo, innerMat);
+                    group.add(outerRing, innerRing);
+
+                    // 4 diamond accents around the hoop rim
+                    const gems = new THREE.Group();
+                    for (let g = 0; g < 4; g++) {
+                        const a = (g / 4) * Math.PI * 2;
+                        const gem = new THREE.Mesh(gemGeo, gemMat);
+                        gem.position.set(Math.cos(a) * 2.5, Math.sin(a) * 2.5, 0);
+                        gems.add(gem);
+                    }
+                    group.add(gems);
+
+                    scene.add(group);
+                    skyRings.push({
+                        id: globalIdx++,
+                        group,
+                        outerRing,
+                        innerRing,
+                        gems,
+                        outerMat,
+                        innerMat,
+                        gemMat,
+                        baseY: ringY,
+                        cooldown: 0,
+                        pulseTimer: 0
+                    });
+                });
+            });
+        }
+
+        /**
          * Builds drifting low-poly tropical clouds, circling gorge macaws, and golden valley fireflies.
          */
         function buildCloudsBirdsAndFireflies() {
@@ -1428,7 +2089,7 @@
                 flatShading: true
             });
 
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 26; i++) {
                 const cloud = new THREE.Group();
                 const puffs = 3 + Math.floor(Math.random() * 3);
                 for (let p = 0; p < puffs; p++) {
@@ -1438,16 +2099,16 @@
                     cloud.add(puff);
                 }
                 cloud.position.set(
-                    (Math.random() - 0.5) * 350,
-                    68 + Math.random() * 24,
-                    (Math.random() - 0.5) * 350
+                    (Math.random() - 0.5) * 480,
+                    74 + Math.random() * 26,
+                    (Math.random() - 0.5) * 480
                 );
                 scene.add(cloud);
                 clouds.push({ mesh: cloud, speed: 1.2 + Math.random() * 1.4 });
             }
 
             const birdColors = [0xf59e0b, 0xef4444, 0x38bdf8, 0xfef08a];
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
                 const bird = new THREE.Group();
                 const mat = new THREE.MeshStandardMaterial({
                     color: birdColors[i % birdColors.length],
@@ -1470,22 +2131,22 @@
                     group: bird,
                     leftWing,
                     rightWing,
-                    centerX: (Math.random() - 0.5) * 145,
-                    centerZ: (Math.random() - 0.5) * 145,
-                    radius: 18 + Math.random() * 28,
-                    height: 24 + Math.random() * 26,
+                    centerX: (Math.random() - 0.5) * 220,
+                    centerZ: (Math.random() - 0.5) * 220,
+                    radius: 20 + Math.random() * 32,
+                    height: 26 + Math.random() * 28,
                     angle: Math.random() * Math.PI * 2,
                     speed: 0.25 + Math.random() * 0.25,
                     flapSpeed: 7 + Math.random() * 4
                 });
             }
 
-            // 45 Golden Sun-Motes / Tropical Fireflies drifting through the green valley
+            // 60 Golden Sun-Motes / Tropical Fireflies drifting through the expanded green valley
             const moteGeo = new THREE.OctahedronGeometry(0.14, 0);
             const moteMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
-            for (let i = 0; i < 45; i++) {
-                const fx = (Math.random() - 0.5) * 180;
-                const fz = (Math.random() - 0.5) * 180;
+            for (let i = 0; i < 60; i++) {
+                const fx = (Math.random() - 0.5) * 260;
+                const fz = (Math.random() - 0.5) * 260;
                 const fy = Math.max(WATER_LEVEL + 1.2, getTerrainHeight(fx, fz) + 1.5 + Math.random() * 3.5);
                 const mote = new THREE.Mesh(moteGeo, moteMat);
                 mote.position.set(fx, fy, fz);
@@ -1600,14 +2261,14 @@
          */
         function buildRelics() {
             const relicCoords = [
-                { x: -16, z: 36 },
-                { x: 56, z: 32 },
-                { x: 46, z: -18 },
-                { x: -58, z: 8 },
-                { x: -86, z: -64 },
-                { x: -24, z: -98 },
-                { x: 84, z: -82 },
-                { x: 64, z: 102 }
+                { x: -20, z: 42 },                                                            // 1. Riverbend Cove (intro)
+                { x: 76, z: 44 },                                                             // 2. Emerald Gorge Overlook
+                { x: getRiverCenterX(-24) + 17.8, z: -24, fixedY: WATER_LEVEL + 1.65, hideBeacon: true }, // 3. Secret Waterfall Grotto
+                { x: -82, z: 16 },                                                            // 4. Canopy Hollow
+                { x: -118, z: -88 },                                                          // 5. Twin Peaks Ridge
+                { x: getRiverCenterX(-128), z: -128, fixedY: WATER_LEVEL + 1.35 },            // 6. Stepping-Stone River Crossing
+                { x: 115, z: -112 },                                                          // 7. Volcanic Spire (via Geyser Launch)
+                { x: 88, z: 138, locked: true, fixedYOffset: 0.45 }                           // 8. Southern Sanctuary (3 Pressure Totems)
             ];
 
             const crystalMat = new THREE.MeshStandardMaterial({
@@ -1636,7 +2297,9 @@
             const tRelics = I18N[currentLang].relics;
 
             relics = relicCoords.map((loc, idx) => {
-                const groundY = Math.max(WATER_LEVEL + 0.8, getTerrainHeight(loc.x, loc.z));
+                const groundY = loc.fixedY !== undefined
+                    ? loc.fixedY
+                    : Math.max(WATER_LEVEL + 0.8, getTerrainHeight(loc.x, loc.z)) + (loc.fixedYOffset || 0);
                 const group = new THREE.Group();
                 group.position.set(loc.x, groundY + 2.2, loc.z);
 
@@ -1648,9 +2311,12 @@
                 ring.rotation.x = Math.PI / 2.4;
                 group.add(ring);
 
-                const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.9, 58, 10, 1, true), beaconMat);
-                beacon.position.y = 27;
-                group.add(beacon);
+                let beacon = null;
+                if (!loc.hideBeacon) {
+                    beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.9, 64, 10, 1, true), beaconMat);
+                    beacon.position.y = 30;
+                    group.add(beacon);
+                }
 
                 const pedestal = new THREE.Mesh(
                     new THREE.CylinderGeometry(1.3, 1.75, 0.85, 7),
@@ -1670,6 +2336,7 @@
                     ring,
                     beacon,
                     baseY: groundY + 2.2,
+                    locked: Boolean(loc.locked),
                     collected: false
                 };
             });
@@ -1696,6 +2363,36 @@
                     envelope: { attack: 0.03, decay: 0.4, sustain: 0.2, release: 1.4 }
                 }).connect(reverb);
                 chimeSynth.volume.value = -10;
+
+                // Bright bell/marimba synth for ascending Sky Ring boost chains
+                ringSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.01, decay: 0.22, sustain: 0.12, release: 0.9 }
+                }).connect(reverb);
+                ringSynth.volume.value = -8;
+
+                // Short airy whoosh burst when passing through a Sky Ring
+                boostFilter = new Tone.Filter(1400, 'bandpass').toDestination();
+                boostNoise = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.02, decay: 0.26, sustain: 0, release: 0.15 }
+                }).connect(boostFilter);
+                boostNoise.volume.value = -18;
+
+                // Deep resonant chime synth for Ancient Pressure Totems & Sanctuary Unlock
+                totemSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.04, decay: 0.5, sustain: 0.25, release: 1.8 }
+                }).connect(reverb);
+                totemSynth.volume.value = -9;
+
+                // Pressurized volcanic steam roar for the Geyser Launch
+                geyserFilter = new Tone.Filter(750, 'bandpass').toDestination();
+                geyserNoise = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.05, decay: 0.9, sustain: 0.1, release: 0.6 }
+                }).connect(geyserFilter);
+                geyserNoise.volume.value = -10;
 
                 audioReady = true;
             } catch (err) {
@@ -1726,6 +2423,43 @@
             chimeSynth.triggerAttackRelease(['E6'], '2n', now + 0.18);
         }
 
+        function playRingBoostChime(chainCount) {
+            if (!soundEnabled || !audioReady || !ringSynth) return;
+            const scale = ['C5', 'D5', 'E5', 'G5', 'A5', 'C6', 'D6', 'E6', 'G6'];
+            const idx = Math.min(Math.max(0, chainCount - 1), scale.length - 1);
+            const shimmerIdx = Math.min(idx + 2, scale.length - 1);
+            const now = Tone.now();
+            ringSynth.triggerAttackRelease([scale[idx]], '8n', now);
+            ringSynth.triggerAttackRelease([scale[shimmerIdx]], '8n', now + 0.07);
+            if (boostNoise) {
+                boostNoise.triggerAttackRelease('8n', now);
+            }
+        }
+
+        function playTotemActivateSound(step, unlocked = false) {
+            if (!soundEnabled || !audioReady || !totemSynth) return;
+            const now = Tone.now();
+            const chords = [
+                ['D4', 'A4'],
+                ['F#4', 'C#5'],
+                ['A4', 'E5', 'A5']
+            ];
+            const chord = chords[Math.min(Math.max(0, step - 1), chords.length - 1)];
+            totemSynth.triggerAttackRelease(chord, '4n', now);
+            if (unlocked) {
+                totemSynth.triggerAttackRelease(['D5', 'F#5', 'A5', 'D6'], '2n', now + 0.24);
+            }
+        }
+
+        function playGeyserLaunchSound() {
+            if (!soundEnabled || !audioReady || !geyserNoise) return;
+            const now = Tone.now();
+            geyserNoise.triggerAttackRelease('2n', now);
+            if (totemSynth) {
+                totemSynth.triggerAttackRelease(['G3', 'D4'], '4n', now);
+            }
+        }
+
         // ============================================================================
         // 4. PARTICLE EFFECTS, UI UPDATES & GAMEPLAY LOOP
         // ============================================================================
@@ -1747,8 +2481,45 @@
             }
         }
 
-        function showDiscoveryToast(title, subtitle) {
+        function spawnBoostBurst(pos) {
+            const geo = new THREE.OctahedronGeometry(0.2, 0);
+            const goldMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+            const mintMat = new THREE.MeshBasicMaterial({ color: 0x6ee7b7 });
+            for (let i = 0; i < 20; i++) {
+                const p = new THREE.Mesh(geo, i % 2 === 0 ? goldMat : mintMat);
+                p.position.copy(pos);
+                const angle = (i / 20) * Math.PI * 2;
+                const speed = 4.5 + Math.random() * 5.5;
+                scene.add(p);
+                particles.push({
+                    mesh: p,
+                    vel: new THREE.Vector3(Math.cos(angle) * speed, 2 + Math.random() * 5, Math.sin(angle) * speed),
+                    life: 0.95
+                });
+            }
+        }
+
+        function spawnSteamBurst(pos) {
+            const geo = new THREE.DodecahedronGeometry(0.45, 0);
+            const steamMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc, transparent: true, opacity: 0.85 });
+            const emberMat = new THREE.MeshBasicMaterial({ color: 0xfb923c });
+            for (let i = 0; i < 26; i++) {
+                const p = new THREE.Mesh(geo, i % 4 === 0 ? emberMat : steamMat);
+                p.position.copy(pos);
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2.0 + Math.random() * 5.0;
+                scene.add(p);
+                particles.push({
+                    mesh: p,
+                    vel: new THREE.Vector3(Math.cos(angle) * speed, 10 + Math.random() * 14, Math.sin(angle) * speed),
+                    life: 1.25
+                });
+            }
+        }
+
+        function showDiscoveryToast(title, subtitle, badgeOverride = null) {
             const toast = document.getElementById('discovery-toast');
+            document.getElementById('toast-badge').textContent = badgeOverride || I18N[currentLang].toastDiscovered;
             document.getElementById('toast-title').textContent = title;
             document.getElementById('toast-subtitle').textContent = subtitle;
             toast.classList.remove('toast-active');
@@ -1796,16 +2567,40 @@
                 inputVec.addScaledVector(forward, moveForward).addScaledVector(right, moveRight).normalize();
             }
 
-            // Determine current speed based on terrain/water/gliding state
+            // Update boost, geyser launch & ring chain timers
+            if (player.boostTimer > 0) player.boostTimer = Math.max(0, player.boostTimer - dt);
+            if (player.geyserLaunchTimer > 0) player.geyserLaunchTimer = Math.max(0, player.geyserLaunchTimer - dt);
+            if (player.chainTimer > 0) {
+                player.chainTimer = Math.max(0, player.chainTimer - dt);
+                if (player.chainTimer === 0) player.ringChain = 0;
+            }
+
+            // Detect active Thermal Updraft column
+            let activeUpdraft = null;
+            for (let i = 0; i < updrafts.length; i++) {
+                const u = updrafts[i];
+                const hDist = Math.hypot(player.pos.x - u.x, player.pos.z - u.z);
+                if (hDist <= u.radius && player.pos.y >= u.baseY - 1.5 && player.pos.y <= u.topY + 0.5) {
+                    activeUpdraft = u;
+                    break;
+                }
+            }
+            player.inUpdraft = Boolean(activeUpdraft);
+
+            // Determine current speed based on terrain/water/gliding/boost state
             let speed = 11.5;
             if (isSprinting && !player.inWater) speed = 18.0;
             if (player.inWater) speed = 8.2;
             if (player.gliding) speed = 22.0;
+            if (player.boostTimer > 0) {
+                const chainBonus = Math.min(player.ringChain, 6) * 1.4;
+                speed = player.gliding ? (33.0 + chainBonus) : (speed + 6.0);
+            }
 
             // Smooth horizontal velocity
             const targetVx = inputVec.x * speed;
             const targetVz = inputVec.z * speed;
-            const accel = player.onGround ? 12.0 : (player.gliding ? 3.5 : 5.0);
+            const accel = player.onGround ? 12.0 : (player.gliding ? 3.8 : 5.0);
             player.vel.x = THREE.MathUtils.lerp(player.vel.x, targetVx, Math.min(1, accel * dt));
             player.vel.z = THREE.MathUtils.lerp(player.vel.z, targetVz, Math.min(1, accel * dt));
 
@@ -1818,31 +2613,45 @@
                 player.yaw += diff * Math.min(1, 10 * dt);
             }
 
-            // Gliding activation: airborne, falling, holding Space, and above water
-            if (!player.onGround && !player.inWater && jumpHeld && player.vel.y < -1.0) {
+            // Gliding activation: airborne, holding Space, and falling (or staying open in an updraft / boost / geyser launch)
+            if (
+                !player.onGround &&
+                !player.inWater &&
+                jumpHeld &&
+                (player.gliding || player.vel.y < -1.0 || player.inUpdraft || player.boostTimer > 0 || (player.geyserLaunchTimer > 0 && player.vel.y < 14.0))
+            ) {
                 player.gliding = true;
             } else {
                 player.gliding = false;
             }
 
-            // Gravity & Buoyancy
+            // Gravity, Thermal Updraft Lift & Buoyancy
             if (player.inWater) {
                 const targetWaterY = WATER_LEVEL - 0.85;
                 player.vel.y += (targetWaterY - player.pos.y) * 14.0 * dt;
                 player.vel.y *= 0.88;
                 if (jumpHeld) {
-                    player.vel.y = 9.5;
+                    player.vel.y = player.inUpdraft ? 12.8 : 9.5;
                     player.inWater = false;
                 }
             } else if (player.gliding) {
-                player.vel.y = Math.max(player.vel.y + GLIDE_GRAVITY * dt, -3.6);
+                if (activeUpdraft) {
+                    // Smooth buoyant thermal climb tapering gently near the top of the column
+                    const headroom = Math.max(0, activeUpdraft.topY - player.pos.y);
+                    const crestFactor = THREE.MathUtils.clamp(headroom / 4.0, 0.12, 1.0);
+                    const targetClimb = 12.5 * crestFactor;
+                    player.vel.y = THREE.MathUtils.lerp(player.vel.y, targetClimb, Math.min(1, 5.5 * dt));
+                } else {
+                    const sinkFloor = player.boostTimer > 0 ? -1.4 : -3.6;
+                    player.vel.y = Math.max(player.vel.y + GLIDE_GRAVITY * dt, sinkFloor);
+                }
             } else {
                 player.vel.y += GRAVITY * dt;
             }
 
-            // Jump from ground
+            // Jump from ground (extra buoyant takeoff when inside an updraft)
             if (player.onGround && jumpHeld) {
-                player.vel.y = JUMP_VELOCITY;
+                player.vel.y = player.inUpdraft ? JUMP_VELOCITY * 1.28 : JUMP_VELOCITY;
                 player.onGround = false;
             }
 
@@ -1856,12 +2665,33 @@
             player.pos.x = THREE.MathUtils.clamp(player.pos.x, -limit, limit);
             player.pos.z = THREE.MathUtils.clamp(player.pos.z, -limit, limit);
 
-            // Ground, Wooden Suspension Bridge & Water collision
+            // Prevent entering the sealed Southern Sanctuary dome before activating all 3 Pressure Totems
+            if (sanctuaryBarrier && !sanctuaryUnlocked) {
+                const bx = player.pos.x - sanctuaryBarrier.x;
+                const bz = player.pos.z - sanctuaryBarrier.z;
+                const bDist = Math.hypot(bx, bz);
+                if (bDist < 4.15 && Math.abs(player.pos.y - sanctuaryBarrier.y) < 5.5) {
+                    const pushLen = Math.max(0.01, bDist);
+                    player.pos.x = sanctuaryBarrier.x + (bx / pushLen) * 4.25;
+                    player.pos.z = sanctuaryBarrier.z + (bz / pushLen) * 4.25;
+                    if (sanctuaryHintCooldown <= 0) {
+                        sanctuaryHintCooldown = 3.5;
+                        const t = I18N[currentLang];
+                        const activeCount = pressureTotems.filter(pt => pt.activated).length;
+                        showDiscoveryToast(
+                            t.toastSanctuaryLockedTitle,
+                            `${t.toastSanctuaryLockedSub} (${activeCount}/3)`,
+                            t.toastChallenge
+                        );
+                    }
+                }
+            }
+
+            // Ground, Wooden Suspension Bridge, Stepping Stones, Grotto Floor & Sanctuary Dais collision
             const terrainY = getTerrainHeight(player.pos.x, player.pos.z);
-            const bridgeY = getBridgeDeckHeight(player.pos.x, player.pos.z);
-            // Allow stepping smoothly onto the bridge deck from the riverbanks
-            const onBridgeLevel = bridgeY > -Infinity && player.pos.y >= bridgeY - 1.15 && player.vel.y <= 1.5;
-            const supportY = onBridgeLevel ? Math.max(terrainY, bridgeY) : terrainY;
+            const platformY = getSupportPlatformHeight(player.pos.x, player.pos.z);
+            const onPlatformLevel = platformY > -Infinity && player.pos.y >= platformY - 1.25 && player.vel.y <= 1.5;
+            const supportY = onPlatformLevel ? Math.max(terrainY, platformY) : terrainY;
 
             if (player.pos.y <= supportY) {
                 player.pos.y = supportY;
@@ -1910,14 +2740,26 @@
                 rightArm.rotation.x *= 0.85;
             }
 
-            // Dynamic wind audio pitch when gliding or high in the mountains
-            if (soundEnabled && audioReady && windFilter) {
-                const targetFreq = player.gliding ? 950 : (320 + Math.max(0, player.pos.y) * 9);
+            // Dynamic wind audio pitch & swell when riding updrafts, boosting, or gliding
+            if (soundEnabled && audioReady && windFilter && windNoise) {
+                const targetFreq = (player.inUpdraft && player.gliding)
+                    ? 1450
+                    : (player.boostTimer > 0 ? 1280 : (player.gliding ? 950 : (320 + Math.max(0, player.pos.y) * 9)));
+                const targetVol = (player.inUpdraft && player.gliding) ? -20 : (player.boostTimer > 0 ? -22 : -26);
                 windFilter.frequency.rampTo(targetFreq, 0.2);
+                windNoise.volume.rampTo(targetVol, 0.25);
             }
         }
 
         function updateCamera() {
+            // Subtle dynamic FOV kick during Sky Ring boost bursts & Geyser launches
+            const targetFov = (player.boostTimer > 0 || player.geyserLaunchTimer > 0)
+                ? 68
+                : (player.inUpdraft && player.gliding ? 63 : 60);
+            if (Math.abs(camera.fov - targetFov) > 0.05) {
+                camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.12);
+                camera.updateProjectionMatrix();
+            }
             if (camState.firstPerson) {
                 const eyePos = new THREE.Vector3(player.pos.x, player.pos.y + 2.15, player.pos.z);
                 camera.position.copy(eyePos);
@@ -1965,6 +2807,88 @@
                 m.mesh.scale.setScalar(0.7 + cycle * 1.1);
             });
 
+            // Animate rising Thermal Updraft wind hoops & swirling streaks
+            updrafts.forEach(u => {
+                const basePulse = 0.94 + Math.sin(elapsed * 3.2 + u.phase) * 0.08;
+                u.baseRing.scale.set(basePulse, basePulse, 1);
+
+                u.rings.forEach(r => {
+                    const t = (elapsed * 0.36 + r.offset + u.phase * 0.1) % 1.0;
+                    r.mesh.position.y = 0.5 + t * (u.height - 0.8);
+                    const scale = 0.85 + Math.sin(t * Math.PI) * 0.25;
+                    r.mesh.scale.set(scale, scale, 1);
+                    r.mat.opacity = Math.sin(t * Math.PI) * 0.52;
+                });
+
+                u.streaks.forEach(s => {
+                    const t = (elapsed * 0.52 + s.offset + u.phase * 0.15) % 1.0;
+                    const ang = s.angleOffset + elapsed * 1.8 + t * Math.PI * 1.5;
+                    const rad = u.radius * (0.58 + 0.18 * Math.sin(t * Math.PI));
+                    s.mesh.position.set(Math.cos(ang) * rad, 1.8 + t * (u.height - 3.6), Math.sin(ang) * rad);
+                    s.mat.opacity = Math.sin(t * Math.PI) * 0.48;
+                });
+            });
+
+            // Animate Floating Sky Rings & Detect Pass-Through Boost Chains
+            const playerCenter = new THREE.Vector3(player.pos.x, player.pos.y + 1.3, player.pos.z);
+            skyRings.forEach(ring => {
+                ring.group.position.y = ring.baseY + Math.sin(elapsed * 2.1 + ring.id * 0.9) * 0.32;
+                ring.innerRing.rotation.z += dt * (ring.cooldown > 0 ? 4.2 : 1.5);
+                ring.gems.rotation.z -= dt * 0.9;
+
+                if (ring.pulseTimer > 0) {
+                    ring.pulseTimer = Math.max(0, ring.pulseTimer - dt);
+                    const p = ring.pulseTimer / 0.65;
+                    ring.group.scale.setScalar(1.0 + Math.sin(p * Math.PI) * 0.34);
+                } else {
+                    ring.group.scale.setScalar(1.0);
+                }
+
+                if (ring.cooldown > 0) {
+                    ring.cooldown = Math.max(0, ring.cooldown - dt);
+                    const recharge = 1.0 - ring.cooldown / 8.0;
+                    ring.outerMat.color.setHex(recharge > 0.85 ? 0xfbbf24 : 0x6ee7b7);
+                    ring.outerMat.emissive.setHex(recharge > 0.85 ? 0xf59e0b : 0x10b981);
+                    ring.outerMat.opacity = 0.28 + recharge * 0.68;
+                    ring.innerMat.opacity = 0.18 + recharge * 0.47;
+                    ring.gemMat.opacity = 0.25 + recharge * 0.7;
+                } else {
+                    ring.outerMat.color.setHex(0xfbbf24);
+                    ring.outerMat.emissive.setHex(0xf59e0b);
+                    ring.outerMat.opacity = 0.96;
+                    ring.innerMat.opacity = 0.65;
+                    ring.gemMat.opacity = 0.95;
+
+                    const dist = playerCenter.distanceTo(ring.group.position);
+                    if (dist < 3.85) {
+                        ring.cooldown = 8.0;
+                        ring.pulseTimer = 0.65;
+
+                        // Increment aerial chain streak & grant speed + altitude burst
+                        player.ringChain = player.chainTimer > 0 ? player.ringChain + 1 : 1;
+                        player.chainTimer = 6.5;
+                        player.boostTimer = 2.2;
+                        player.bestRingChain = Math.max(player.bestRingChain, player.ringChain);
+
+                        // Forward boost impulse along camera/movement facing + upward lift
+                        const boostDirX = Math.hypot(player.vel.x, player.vel.z) > 1.5
+                            ? player.vel.x / Math.hypot(player.vel.x, player.vel.z)
+                            : -Math.sin(camState.yaw);
+                        const boostDirZ = Math.hypot(player.vel.x, player.vel.z) > 1.5
+                            ? player.vel.z / Math.hypot(player.vel.x, player.vel.z)
+                            : -Math.cos(camState.yaw);
+                        const impulseSpeed = 32.0 + Math.min(player.ringChain, 6) * 1.5;
+                        player.vel.x = boostDirX * impulseSpeed;
+                        player.vel.z = boostDirZ * impulseSpeed;
+                        player.vel.y = Math.max(player.vel.y, 7.2);
+                        player.onGround = false;
+
+                        spawnBoostBurst(ring.group.position);
+                        playRingBoostChime(player.ringChain);
+                    }
+                }
+            });
+
             // Gentle breeze sway on palm crowns
             swayingFoliage.forEach(f => {
                 f.mesh.rotation.z = Math.sin(elapsed * 1.4 + f.phase) * f.amp;
@@ -1989,10 +2913,109 @@
                 f.mesh.position.z = f.baseZ + Math.cos(elapsed * 0.8 + f.phase) * 1.8;
             });
 
-            // Drift clouds
+            // Drift clouds across the expanded 520x520 valley
             clouds.forEach(c => {
                 c.mesh.position.x += c.speed * dt;
-                if (c.mesh.position.x > 210) c.mesh.position.x = -210;
+                if (c.mesh.position.x > 280) c.mesh.position.x = -280;
+            });
+
+            // Subtle emerald pulse inside the Secret Waterfall Grotto
+            if (grottoLight) {
+                grottoLight.intensity = 2.1 + Math.sin(elapsed * 3.0) * 0.55;
+            }
+
+            // Animate Volcanic Geyser & Trigger Launch toward the Volcanic Spire
+            if (geyserCooldown > 0) geyserCooldown = Math.max(0, geyserCooldown - dt);
+            if (volcanicGeyser) {
+                if (volcanicGeyser.eruptionTimer > 0) {
+                    volcanicGeyser.eruptionTimer = Math.max(0, volcanicGeyser.eruptionTimer - dt);
+                }
+                const eruptBoost = volcanicGeyser.eruptionTimer > 0 ? 1.85 : 1.0;
+                const jetPulse = (0.88 + Math.sin(elapsed * 6.0) * 0.14) * eruptBoost;
+                volcanicGeyser.steamJet.scale.set(1.0, jetPulse, 1.0);
+                volcanicGeyser.jetMat.opacity = volcanicGeyser.eruptionTimer > 0 ? 0.52 : 0.22;
+                volcanicGeyser.geyserLight.intensity = 2.1 + Math.sin(elapsed * 7.5) * 0.5 + (volcanicGeyser.eruptionTimer > 0 ? 2.0 : 0);
+
+                volcanicGeyser.puffs.forEach(p => {
+                    const cycle = (elapsed * (volcanicGeyser.eruptionTimer > 0 ? 1.6 : 0.85) + p.offset) % 1.0;
+                    p.mesh.position.set(
+                        Math.sin(elapsed * 2.5 + p.offset * 10) * 0.85,
+                        0.8 + cycle * (volcanicGeyser.eruptionTimer > 0 ? 22.0 : 12.0),
+                        Math.cos(elapsed * 2.3 + p.offset * 10) * 0.85
+                    );
+                    p.mesh.scale.setScalar(0.75 + cycle * 1.65);
+                    p.mat.opacity = Math.sin(cycle * Math.PI) * 0.6;
+                });
+
+                const gDist = Math.hypot(player.pos.x - volcanicGeyser.x, player.pos.z - volcanicGeyser.z);
+                if (gDist < volcanicGeyser.radius && Math.abs(player.pos.y - volcanicGeyser.y) < 3.6 && geyserCooldown <= 0) {
+                    geyserCooldown = 2.0;
+                    volcanicGeyser.eruptionTimer = 1.4;
+                    player.geyserLaunchTimer = 2.6;
+                    player.onGround = false;
+
+                    // Launch high enough to soar cleanly onto the Volcanic Spire summit (115, -112)
+                    const toPeakX = 115 - volcanicGeyser.x;
+                    const toPeakZ = -112 - volcanicGeyser.z;
+                    const toPeakLen = Math.hypot(toPeakX, toPeakZ) || 1;
+                    player.vel.x = (toPeakX / toPeakLen) * 10.5;
+                    player.vel.z = (toPeakZ / toPeakLen) * 10.5;
+                    player.vel.y = 31.0;
+
+                    spawnSteamBurst(new THREE.Vector3(volcanicGeyser.x, volcanicGeyser.y + 1.2, volcanicGeyser.z));
+                    playGeyserLaunchSound();
+                    const tNow = I18N[currentLang];
+                    showDiscoveryToast(tNow.toastGeyserTitle, tNow.toastGeyserSub, tNow.toastChallenge);
+                }
+            }
+
+            // Animate Southern Sanctuary Energy Barrier & 3 Ancient Pressure Totems
+            if (sanctuaryHintCooldown > 0) sanctuaryHintCooldown = Math.max(0, sanctuaryHintCooldown - dt);
+            if (sanctuaryBarrier && !sanctuaryUnlocked) {
+                sanctuaryBarrier.wire.rotation.y += dt * 0.65;
+                sanctuaryBarrier.wire.rotation.x += dt * 0.25;
+                sanctuaryBarrier.mat.opacity = 0.28 + Math.sin(elapsed * 3.0) * 0.07;
+            }
+
+            pressureTotems.forEach(pt => {
+                pt.obelisk.rotation.y += dt * (pt.activated ? 2.4 : 1.0);
+                pt.obelisk.position.y = 2.6 + Math.sin(elapsed * 2.6 + pt.id * 1.4) * 0.22;
+
+                if (!pt.activated) {
+                    const pDist = Math.hypot(player.pos.x - pt.x, player.pos.z - pt.z);
+                    if (pDist < 2.35 && Math.abs(player.pos.y - pt.y) < 2.8) {
+                        pt.activated = true;
+                        pt.plate.position.y = 0.24; // Depress pressure slab
+                        pt.plateMat.color.setHex(0x34d399);
+                        pt.plateMat.emissive.setHex(0x10b981);
+                        pt.obeliskMat.color.setHex(0x6ee7b7);
+                        pt.beamMat.color.setHex(0x34d399);
+                        pt.beamMat.opacity = 0.62;
+
+                        const activeCount = pressureTotems.filter(x => x.activated).length;
+                        const unlockedNow = activeCount === pressureTotems.length;
+                        spawnDiscoveryBurst(new THREE.Vector3(pt.x, pt.y + 1.4, pt.z));
+                        playTotemActivateSound(activeCount, unlockedNow);
+
+                        const tNow = I18N[currentLang];
+                        if (unlockedNow && !sanctuaryUnlocked) {
+                            sanctuaryUnlocked = true;
+                            if (sanctuaryBarrier) {
+                                sanctuaryBarrier.mesh.visible = false;
+                                sanctuaryBarrier.wire.visible = false;
+                                spawnBoostBurst(new THREE.Vector3(sanctuaryBarrier.x, sanctuaryBarrier.y + 2.8, sanctuaryBarrier.z));
+                            }
+                            if (relics[7]) relics[7].locked = false;
+                            showDiscoveryToast(tNow.toastSanctuaryOpenTitle, tNow.toastSanctuaryOpenSub, tNow.toastChallenge);
+                        } else {
+                            showDiscoveryToast(
+                                `${tNow.toastTotemTitle} (${activeCount}/3)`,
+                                tNow.toastTotemSub,
+                                tNow.toastChallenge
+                            );
+                        }
+                    }
+                }
             });
 
             // Circle tropical birds
@@ -2021,7 +3044,7 @@
                 r.ring.rotation.y += dt * 0.8;
 
                 const dist = player.pos.distanceTo(r.group.position);
-                if (dist < 3.8) {
+                if (!r.locked && dist < 3.8) {
                     r.collected = true;
                     r.group.visible = false;
                     collectedCount++;
@@ -2032,6 +3055,7 @@
 
                     if (collectedCount === relics.length) {
                         setTimeout(() => {
+                            document.getElementById('victory-chain-value').textContent = `x${player.bestRingChain}`;
                             const modal = document.getElementById('victory-modal');
                             modal.classList.remove('hidden');
                             modal.classList.add('flex');
@@ -2069,12 +3093,30 @@
             document.getElementById('biome-label').textContent = biome;
 
             const statusBadge = document.getElementById('status-badge');
-            if (player.gliding) {
+            if (player.geyserLaunchTimer > 0 && !player.onGround) {
+                statusBadge.textContent = t.status.geyser;
+            } else if (player.boostTimer > 0) {
+                statusBadge.textContent = `${t.status.boosting} x${Math.max(1, player.ringChain)}`;
+            } else if (player.inUpdraft && player.gliding) {
+                statusBadge.textContent = t.status.updraft;
+            } else if (player.gliding) {
                 statusBadge.textContent = t.status.gliding;
             } else if (player.inWater) {
                 statusBadge.textContent = t.status.swimming;
             } else {
                 statusBadge.textContent = t.status.exploring;
+            }
+
+            // Update active Sky Ring Chain HUD pill
+            const chainPill = document.getElementById('chain-pill');
+            if (player.chainTimer > 0 && player.ringChain > 0) {
+                chainPill.classList.remove('opacity-0', 'scale-95');
+                chainPill.classList.add('opacity-100', 'scale-100');
+                document.getElementById('chain-count').textContent = `x${player.ringChain}`;
+                document.getElementById('chain-bar').style.width = `${(player.chainTimer / 6.5) * 100}%`;
+            } else {
+                chainPill.classList.add('opacity-0', 'scale-95');
+                chainPill.classList.remove('opacity-100', 'scale-100');
             }
 
             // Compass pointing toward nearest uncollected relic relative to camera yaw
@@ -2223,6 +3265,9 @@
                 const t = I18N[currentLang];
                 player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
                 player.vel.set(0, 0, 0);
+                player.boostTimer = 0;
+                player.ringChain = 0;
+                player.chainTimer = 0;
                 showDiscoveryToast(t.toastCampTitle, t.toastCampSub);
             });
 
@@ -2247,14 +3292,36 @@
             document.getElementById('btn-replay').addEventListener('click', () => {
                 collectedCount = 0;
                 document.getElementById('relic-count').textContent = '0';
-                relics.forEach(r => {
+                relics.forEach((r, idx) => {
                     r.collected = false;
+                    r.locked = (idx === 7); // Re-seal Southern Sanctuary relic
                     r.group.visible = true;
+                });
+                sanctuaryUnlocked = false;
+                if (sanctuaryBarrier) {
+                    sanctuaryBarrier.mesh.visible = true;
+                    sanctuaryBarrier.wire.visible = true;
+                }
+                pressureTotems.forEach(pt => {
+                    pt.activated = false;
+                    pt.plate.position.y = 0.4;
+                    pt.plateMat.color.setHex(0xf59e0b);
+                    pt.plateMat.emissive.setHex(0xd97706);
+                    pt.obeliskMat.color.setHex(0xfbbf24);
+                    pt.beamMat.color.setHex(0xfbbf24);
+                    pt.beamMat.opacity = 0.22;
                 });
                 const modal = document.getElementById('victory-modal');
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
                 player.pos.set(14, getTerrainHeight(14, 55) + 1.0, 55);
+                player.vel.set(0, 0, 0);
+                player.boostTimer = 0;
+                player.geyserLaunchTimer = 0;
+                player.ringChain = 0;
+                player.chainTimer = 0;
+                player.bestRingChain = 0;
+                skyRings.forEach(r => { r.cooldown = 0; r.pulseTimer = 0; });
             });
 
             // Responsive Resize
