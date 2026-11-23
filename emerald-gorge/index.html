@@ -207,10 +207,11 @@
         </div>
     </header>
 
-    <!-- Top-Right Minimap -->
-    <div id="minimap-box" class="fixed top-20 right-3 z-20 pointer-events-none">
-        <div class="hud-glass rounded-2xl p-1.5 border-emerald-400/40 shadow-2xl">
+    <!-- Top-Right Minimap (Click to enlarge) -->
+    <div id="minimap-box" class="fixed top-20 right-3 z-20 pointer-events-auto cursor-pointer group" title="Click to enlarge / Zum Vergrössern klicken (M)">
+        <div class="hud-glass rounded-2xl p-1.5 border-emerald-400/40 group-hover:border-amber-300/70 shadow-2xl relative transition">
             <canvas id="minimap-canvas" width="240" height="240" class="rounded-xl block"></canvas>
+            <span class="absolute bottom-2.5 right-2.5 px-1.5 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-400/30 text-[10px] font-bold text-emerald-200">🔍 [M]</span>
         </div>
     </div>
 
@@ -262,6 +263,9 @@
             <button id="btn-help" class="game-btn rounded-xl px-2.5 py-1.5 text-xs font-bold text-white flex items-center gap-1 cursor-pointer" title="Controls & Map Guide">
                 <span>🗺️</span>
                 <span id="guide-text">Guide</span>
+            </button>
+            <button id="btn-hardcore" class="game-btn-secondary rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-200 border-slate-400/30 flex items-center gap-1 cursor-pointer" title="Switch Game Mode (Normal / Hardcore / Creative)">
+                <span id="hardcore-btn-text">🎮 Normal</span>
             </button>
         </div>
     </footer>
@@ -334,6 +338,16 @@
                 </div>
             </div>
 
+            <div class="flex items-center justify-between gap-3 mb-4 rounded-xl px-3.5 py-2.5 bg-emerald-950/55 border border-emerald-400/30">
+                <div class="text-xs text-emerald-100">
+                    <span class="font-bold">🎮 Modus / Mode:</span>
+                    <span id="modal-hardcore-desc" class="text-emerald-200/80 ml-1">Normal / 💀 Hardcore / ✨ Kreativ</span>
+                </div>
+                <button id="btn-modal-hardcore" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-slate-700/70 text-slate-200 border border-slate-400/30 cursor-pointer">
+                    Normal
+                </button>
+            </div>
+
             <button id="btn-start-game" class="game-btn w-full rounded-2xl py-3.5 font-display font-extrabold text-base text-white tracking-wide cursor-pointer">
                 Begin Exploration 🌴
             </button>
@@ -359,6 +373,25 @@
         </div>
     </div>
 
+    <!-- Hardcore Game Over Screen -->
+    <div id="gameover-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-red-950/88 backdrop-blur-md">
+        <div class="hud-glass rounded-3xl max-w-md w-full p-7 text-center border-red-500/60 shadow-2xl">
+            <div class="text-6xl mb-3">💀</div>
+            <h2 id="gameover-title" class="font-display font-extrabold text-3xl text-red-400 mb-2">YOU DIED!</h2>
+            <p id="gameover-reason" class="text-base font-bold text-white mb-1">Killed in Hardcore Mode</p>
+            <p id="gameover-desc" class="text-xs text-red-200/85 leading-relaxed mb-5">
+                In Hardcore Mode there is no respawn. Your expedition has ended.
+            </p>
+            <div class="flex justify-center gap-6 mb-6 text-sm font-bold text-amber-200 bg-red-950/60 border border-red-500/30 rounded-2xl py-3 px-4">
+                <div>🏺 <span id="gameover-relics">0 / 8</span></div>
+                <div>💎 <span id="gameover-emeralds">0</span></div>
+            </div>
+            <button id="btn-hardcore-restart" class="w-full rounded-2xl py-3.5 font-display font-extrabold text-base text-white bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 shadow-lg cursor-pointer">
+                🔄 New Hardcore Run
+            </button>
+        </div>
+    </div>
+
     <!-- Upgrade Shop Modal -->
     <div id="shop-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-emerald-950/75 backdrop-blur-md">
         <div class="hud-glass rounded-3xl max-w-lg w-full p-6 border-emerald-400/40 shadow-2xl max-h-[85vh] overflow-y-auto">
@@ -375,6 +408,27 @@
                 </button>
             </div>
             <div id="shop-items" class="grid grid-cols-1 gap-2.5"></div>
+        </div>
+    </div>
+
+    <!-- Enlarged World Map Modal -->
+    <div id="bigmap-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-md">
+        <div class="hud-glass rounded-3xl p-4 sm:p-5 border-emerald-400/40 shadow-2xl max-w-[95vw] max-h-[92vh] flex flex-col items-center gap-3">
+            <div class="w-full flex items-center justify-between gap-4">
+                <h2 class="font-display font-extrabold text-lg sm:text-xl text-white">🗺️ Weltkarte / World Map</h2>
+                <button id="btn-close-bigmap" class="game-btn-secondary rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-100 cursor-pointer">✕</button>
+            </div>
+            <canvas id="bigmap-canvas" width="560" height="560" class="rounded-2xl border border-emerald-400/30 max-w-[85vw] max-h-[70vh] object-contain"></canvas>
+            <div class="flex flex-wrap justify-center gap-3 text-[11px] font-semibold text-emerald-100/90">
+                <span>🟠 Camp</span>
+                <span>🟡 Haus</span>
+                <span>🔵 Dorf</span>
+                <span>🟢 Relikte</span>
+                <span>🏜️ Wüste</span>
+                <span>❄️ Schnee</span>
+                <span>🌋 Vulkan</span>
+                <span>🔴 Krokodile / 🟠 Löwen</span>
+            </div>
         </div>
     </div>
 
@@ -446,6 +500,15 @@
                 toastDimExitSub: 'Back in the human village!',
                 toastFallTitle: '💀 Fatal Fall!',
                 toastFallSub: 'You fell from too high! Returned to the Sanctuary House.',
+                toastWaterfallCaveTitle: '🌊 Waterfall Secret Cave!',
+                toastWaterfallCaveSub: 'You found the hidden treasure behind the waterfall! (+15 💎)',
+                toastExtraCaveTitle: '💎 Biome Treasure Cave!',
+                toastExtraCaveSub: 'You discovered a hidden treasure cave! (+15 💎)',
+                hardcoreOff: 'Hardcore: OFF',
+                hardcoreOn: 'Hardcore: ON',
+                gameOverTitle: 'YOU DIED!',
+                gameOverDesc: 'In Hardcore Mode there is no respawn. Your expedition has ended.',
+                gameOverRestart: '🔄 New Hardcore Run',
                 shopBtn: 'Shop',
                 shopTitle: '💎 Emerald Shop',
                 shopBalanceLabel: 'Your Emeralds:',
@@ -553,6 +616,15 @@
                 toastDimExitSub: 'Wieder zurück im Menschendorf!',
                 toastFallTitle: '💀 Tödlicher Sturz!',
                 toastFallSub: 'Du bist aus zu grosser Höhe gefallen! Zurück beim Rettungshaus.',
+                toastWaterfallCaveTitle: '🌊 Geheime Wasserfall-Höhle!',
+                toastWaterfallCaveSub: 'Du hast den Schatz hinter dem Wasserfall gefunden! (+15 💎)',
+                toastExtraCaveTitle: '💎 Biom-Schatzhöhle!',
+                toastExtraCaveSub: 'Du hast eine versteckte Schatzhöhle entdeckt! (+15 💎)',
+                hardcoreOff: 'Hardcore: AUS',
+                hardcoreOn: 'Hardcore: AN',
+                gameOverTitle: 'DU BIST GESTORBEN!',
+                gameOverDesc: 'Im Hardcore-Modus gibt es keine Wiederbelebung. Deine Expedition ist vorbei.',
+                gameOverRestart: '🔄 Neu starten',
                 shopBtn: 'Shop',
                 shopTitle: '💎 Smaragd-Shop',
                 shopBalanceLabel: 'Deine Smaragde:',
@@ -607,8 +679,19 @@
         };
 
         // --- World & Physics Constants ---
-        const WORLD_SIZE = 1400;
-        const TERRAIN_SEGMENTS = 320; // High-resolution 320x320 terrain mesh for crisp gorge cliffs
+        const WORLD_SIZE = 2200;
+        const TERRAIN_SEGMENTS = 360; // High-resolution 360x360 terrain mesh for huge multi-biome world
+        const BIOMES_EXTRA = {
+            desert: { x: 340, z: 320, radius: 190 },
+            snow: { x: 360, z: -380, radius: 200 },
+            volcanic: { x: -380, z: -360, radius: 190 }
+        };
+        const WATERFALL_CAVE = { z: 140, side: 1 };
+        const EXTRA_TREASURE_CAVES = [
+            { id: 'desert', x: 350, z: 310, color: 0xfacc15 },
+            { id: 'snow', x: 370, z: -370, color: 0x38bdf8 },
+            { id: 'volcanic', x: -375, z: -350, color: 0xf97316 }
+        ];
         const HOUSE_POS = { x: 145, z: -130, y: 19.0 };
         const HOUSE_SPAWN = { x: HOUSE_POS.x, z: HOUSE_POS.z + 6.0 };
         const VILLAGE_POS = { x: -240, z: -220, y: 18.0 };
@@ -646,6 +729,12 @@
         let portalMeshes = [];
         let dimensionEmeralds = [];
         let fallStartY = null;
+        let waterfallCaveFound = false;
+        const extraCavesFound = {};
+        let gameMode = 'normal'; // 'normal' | 'hardcore' | 'creative'
+        let hardcoreMode = false;
+        let modeLocked = false;
+        let isGameOver = false;
         let treasureFound = false;
         let mountainTreasureFound = false;
         let hasBone = false;
@@ -885,11 +974,27 @@
         }
 
         /**
+         * Computes the winding centerline X of the second eastern river for any Z coordinate.
+         */
+        function getSecondRiverX(z) {
+            return 215.0 + Math.sin(z * 0.018 + 1.2) * 32.0 + Math.cos(z * 0.009) * 14.0;
+        }
+
+        /**
+         * Computes the winding centerline X of the third western river for any Z coordinate.
+         */
+        function getThirdRiverX(z) {
+            return -280.0 + Math.sin(z * 0.016 - 0.6) * 30.0 + Math.cos(z * 0.008) * 14.0;
+        }
+
+        /**
          * Computes natural terrain elevation at (x, z) before any man-made flattening or caves.
          */
         function getRawTerrainHeight(x, z) {
             const riverX = getRiverCenterX(z);
-            const distToRiver = Math.abs(x - riverX);
+            const river2X = getSecondRiverX(z);
+            const river3X = getThirdRiverX(z);
+            const distToRiver = Math.min(Math.abs(x - riverX), Math.abs(x - river2X), Math.abs(x - river3X));
 
             // Base multi-octave hills + dramatic ridged mountain peaks
             const macro = fbm(x * 0.0085 + 3.1, z * 0.0085 + 7.4, 5);
@@ -909,8 +1014,8 @@
             elevation += peak1 + peak2 + peak3 + peak4;
 
             // Gentle outer rim containment so the player stays inside a natural basin
-            if (radialDist > 600) {
-                elevation += (radialDist - 600) * 0.55;
+            if (radialDist > 960) {
+                elevation += (radialDist - 960) * 0.55;
             }
 
             // Carve the turquoise river channel and steep green gorge walls
@@ -1028,6 +1133,40 @@
                 }
             }
 
+            // Carve the secret cave behind the special waterfall (WATERFALL_CAVE at z = 140, side = +1)
+            if (Math.abs(z - WATERFALL_CAVE.z) < 7.0) {
+                const wfRiverX = getRiverCenterX(WATERFALL_CAVE.z);
+                const wfStart = wfRiverX + 10.5;
+                const wfEnd = wfRiverX + 34.0;
+                if (x > wfStart - 2.0 && x < wfEnd + 4.0) {
+                    const zFade = 1.0 - THREE.MathUtils.smoothstep(Math.abs(z - WATERFALL_CAVE.z), 2.8, 6.2);
+                    const xFront = x < wfStart + 3.0 ? THREE.MathUtils.smoothstep(x, wfStart - 2.0, wfStart + 3.0) : 1.0;
+                    const xBack = x > wfEnd - 3.0 ? (1.0 - THREE.MathUtils.smoothstep(x, wfEnd - 3.0, wfEnd + 3.5)) : 1.0;
+                    const wfBlend = zFade * xFront * xBack;
+                    if (wfBlend > 0 && finalHeight > WATER_LEVEL + 1.2) {
+                        finalHeight = THREE.MathUtils.lerp(finalHeight, WATER_LEVEL + 1.2, wfBlend);
+                    }
+                }
+            }
+
+            // Carve 3 biome treasure caves (Desert, Snow, Volcanic) with +Z entrance ramps
+            for (let i = 0; i < EXTRA_TREASURE_CAVES.length; i++) {
+                const ec = EXTRA_TREASURE_CAVES[i];
+                const edx = x - ec.x;
+                const edz = z - ec.z;
+                const eDist = Math.hypot(edx, edz);
+                if (eDist < 13.0) {
+                    const chamberCarve = 6.8 * (1.0 - THREE.MathUtils.smoothstep(eDist, 4.2, 8.8));
+                    let rampCarve = 0;
+                    if (edz > -1.0 && Math.abs(edx) < 2.8 && edz < 12.5) {
+                        const sFade = 1.0 - THREE.MathUtils.smoothstep(Math.abs(edx), 1.2, 2.8);
+                        const lFade = 1.0 - THREE.MathUtils.smoothstep(edz, 3.0, 12.0);
+                        rampCarve = 6.2 * sFade * lFade;
+                    }
+                    finalHeight -= Math.max(chamberCarve, rampCarve);
+                }
+            }
+
             return finalHeight;
         }
 
@@ -1084,7 +1223,7 @@
             scene.background = new THREE.Color(TIME_PRESETS[0].sky);
             scene.fog = new THREE.FogExp2(TIME_PRESETS[0].fog, TIME_PRESETS[0].fogDensity);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 1800);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 2600);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1114,8 +1253,8 @@
             sunLight.shadow.mapSize.width = 2048;
             sunLight.shadow.mapSize.height = 2048;
             sunLight.shadow.camera.near = 10;
-            sunLight.shadow.camera.far = 900;
-            const d = 320;
+            sunLight.shadow.camera.far = 1200;
+            const d = 450;
             sunLight.shadow.camera.left = -d;
             sunLight.shadow.camera.right = d;
             sunLight.shadow.camera.top = d;
@@ -1136,6 +1275,7 @@
             buildTropicalFlora();
             buildDeciduousForestAndCaves();
             buildWaterfalls();
+            buildExtraBiomesAndCaves();
             buildCloudsBirdsAndFireflies();
             buildPlayer();
             buildRelics();
@@ -1162,15 +1302,29 @@
                 const x = posAttr.getX(i);
                 const z = posAttr.getZ(i);
                 const y = getTerrainHeight(x, z);
-                posAttr.setY(i, y);
+                const steppedY = y > WATER_LEVEL + 0.5 ? Math.round(y * 0.85) / 0.85 : y;
+                posAttr.setY(i, steppedY);
 
                 const slope = getTerrainSlope(x, z);
                 const noiseTint = (fbm(x * 0.07, z * 0.07, 3) - 0.5) * 0.09;
                 const mossPatch = valueNoise(x * 0.14 + 4.2, z * 0.14 + 1.9);
 
+                const dDesert = Math.hypot(x - BIOMES_EXTRA.desert.x, z - BIOMES_EXTRA.desert.z);
+                const dSnow = Math.hypot(x - BIOMES_EXTRA.snow.x, z - BIOMES_EXTRA.snow.z);
+                const dVolc = Math.hypot(x - BIOMES_EXTRA.volcanic.x, z - BIOMES_EXTRA.volcanic.z);
+
                 if (y < WATER_LEVEL - 0.7) {
                     // Turquoise riverbed with warm pebbles
                     c.setRGB(0.18 + noiseTint, 0.52 + noiseTint, 0.46);
+                } else if (dDesert < BIOMES_EXTRA.desert.radius) {
+                    // Golden Desert Dunes
+                    c.setRGB(0.85 + noiseTint, 0.70 + noiseTint, 0.34);
+                } else if (dSnow < BIOMES_EXTRA.snow.radius) {
+                    // Frosty Snow & Alpine Glacier
+                    c.setRGB(0.86 + noiseTint * 0.5, 0.93 + noiseTint * 0.4, 0.98);
+                } else if (dVolc < BIOMES_EXTRA.volcanic.radius) {
+                    // Volcanic Obsidian & Ash Badlands
+                    c.setRGB(0.22 + noiseTint, 0.18 + noiseTint, 0.24);
                 } else if (y < WATER_LEVEL + 1.2) {
                     // Golden tropical sandbar & river pebbles
                     c.setRGB(0.80 + noiseTint, 0.74 + noiseTint, 0.52);
@@ -1786,7 +1940,7 @@
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
             const toothMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
 
-            const crocZones = [-380, -300, -210, -155, -95, -55, -18, 16, 66, 98, 155, 210, 300, 380];
+            const crocZones = [-750, -600, -480, -380, -300, -210, -155, -95, -55, -18, 16, 66, 98, 155, 210, 300, 380, 480, 600, 750];
 
             crocZones.forEach((baseZ, idx) => {
                 const croc = new THREE.Group();
@@ -1879,6 +2033,86 @@
         }
 
         /**
+         * Toggles Hardcore Mode (1 life, permanent death screen on death).
+         */
+        function lockHardcoreMode() {
+            modeLocked = true;
+            [document.getElementById('btn-hardcore'), document.getElementById('btn-modal-hardcore')].forEach(el => {
+                if (!el) return;
+                el.disabled = true;
+                el.classList.remove('cursor-pointer');
+                el.classList.add('opacity-60', 'cursor-not-allowed');
+            });
+        }
+
+        function toggleHardcoreMode() {
+            if (isGameOver || modeLocked) return;
+            const order = ['normal', 'hardcore', 'creative'];
+            gameMode = order[(order.indexOf(gameMode) + 1) % order.length];
+            hardcoreMode = (gameMode === 'hardcore');
+            const isCreative = (gameMode === 'creative');
+
+            const label = isCreative
+                ? (currentLang === 'de' ? '✨ Kreativ' : '✨ Creative')
+                : hardcoreMode
+                    ? '💀 Hardcore'
+                    : '🎮 Normal';
+
+            const btn = document.getElementById('btn-hardcore');
+            const btnText = document.getElementById('hardcore-btn-text');
+            const modalBtn = document.getElementById('btn-modal-hardcore');
+            if (btnText) btnText.textContent = label;
+            if (btn) {
+                btn.classList.toggle('border-red-500/70', hardcoreMode);
+                btn.classList.toggle('bg-red-950/60', hardcoreMode);
+                btn.classList.toggle('text-red-200', hardcoreMode);
+                btn.classList.toggle('border-sky-400/70', isCreative);
+                btn.classList.toggle('bg-sky-950/60', isCreative);
+                btn.classList.toggle('text-sky-200', isCreative);
+            }
+            if (modalBtn) {
+                modalBtn.textContent = label;
+                modalBtn.className = hardcoreMode
+                    ? 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-red-600 text-white border border-red-400 cursor-pointer'
+                    : isCreative
+                        ? 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-sky-600 text-white border border-sky-400 cursor-pointer'
+                        : 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-slate-700/70 text-slate-200 border border-slate-400/30 cursor-pointer';
+            }
+            addEmeralds(0);
+        }
+
+        /**
+         * Handles player death: respawns at the Sanctuary House in normal mode,
+         * or locks the game and displays the Hardcore Game Over screen in Hardcore mode.
+         */
+        function handlePlayerDeath(title, subtitle) {
+            if (isGameOver) return;
+            spawnDiscoveryBurst(player.pos);
+            player.vel.set(0, 0, 0);
+            player.inWater = false;
+            player.gliding = false;
+            inOtherDimension = false;
+            fallStartY = null;
+
+            if (hardcoreMode) {
+                isGameOver = true;
+                const t = I18N[currentLang];
+                document.getElementById('gameover-title').textContent = t.gameOverTitle;
+                document.getElementById('gameover-reason').textContent = title;
+                document.getElementById('gameover-desc').textContent = t.gameOverDesc;
+                document.getElementById('gameover-relics').textContent = `${collectedCount} / 8`;
+                document.getElementById('gameover-emeralds').textContent = emeralds;
+                document.getElementById('btn-hardcore-restart').textContent = t.gameOverRestart;
+                const modal = document.getElementById('gameover-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                showDiscoveryToast(title, subtitle);
+                player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
+            }
+        }
+
+        /**
          * Updates river crocodile patrolling, hunting AI, and player capture logic.
          */
         function updateCrocodiles(elapsed, dt) {
@@ -1905,7 +2139,7 @@
             crocodiles.forEach(c => {
                 if (c.defeated) return;
                 const distToPlayer = Math.hypot(player.pos.x - c.group.position.x, player.pos.z - c.group.position.z);
-                c.chasing = playerVulnerable && distToPlayer < 34.0 && crocCooldown <= 0;
+                c.chasing = gameMode !== 'creative' && playerVulnerable && distToPlayer < 34.0 && crocCooldown <= 0;
 
                 let targetX, targetZ, moveSpeed;
                 if (c.chasing) {
@@ -1960,14 +2194,7 @@
                 if (c.chasing && distToPlayer < 2.5 && crocCooldown <= 0) {
                     crocCooldown = 3.0;
                     const t = I18N[currentLang];
-                    spawnDiscoveryBurst(player.pos);
-                    showDiscoveryToast(t.toastCrocTitle, t.toastCrocSub);
-
-                    // Teleport player to the Sanctuary House
-                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
-                    player.vel.set(0, 0, 0);
-                    player.inWater = false;
-                    player.gliding = false;
+                    handlePlayerDeath(t.toastCrocTitle, t.toastCrocSub);
                 }
             });
         }
@@ -2093,7 +2320,7 @@
                 if (l.defeated) return;
                 const distToPlayer = Math.hypot(player.pos.x - l.group.position.x, player.pos.z - l.group.position.z);
                 const playerOnLand = !player.inWater && player.pos.y <= getTerrainHeight(player.pos.x, player.pos.z) + 3.0;
-                l.chasing = playerOnLand && distToPlayer < 28.0 && lionCooldown <= 0;
+                l.chasing = gameMode !== 'creative' && playerOnLand && distToPlayer < 28.0 && lionCooldown <= 0;
 
                 let targetX, targetZ, moveSpeed;
                 if (l.chasing) {
@@ -2145,13 +2372,7 @@
                 if (l.chasing && distToPlayer < 2.1 && lionCooldown <= 0) {
                     lionCooldown = 3.0;
                     const t = I18N[currentLang];
-                    spawnDiscoveryBurst(player.pos);
-                    showDiscoveryToast(t.toastLionTitle, t.toastLionSub);
-
-                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
-                    player.vel.set(0, 0, 0);
-                    player.inWater = false;
-                    player.gliding = false;
+                    handlePlayerDeath(t.toastLionTitle, t.toastLionSub);
                 }
             });
         }
@@ -2253,7 +2474,7 @@
 
                 s.group.visible = true;
                 const distToPlayer = Math.hypot(player.pos.x - s.group.position.x, player.pos.z - s.group.position.z);
-                const chasing = distToPlayer < 45.0 && stalkerCooldown <= 0;
+                const chasing = gameMode !== 'creative' && distToPlayer < 45.0 && stalkerCooldown <= 0;
 
                 const targetX = chasing ? player.pos.x : s.homeX + Math.cos(elapsed * 0.4 + s.phase) * 12.0;
                 const targetZ = chasing ? player.pos.z : s.homeZ + Math.sin(elapsed * 0.35 + s.phase) * 12.0;
@@ -2282,13 +2503,7 @@
                 if (chasing && distToPlayer < 2.1 && stalkerCooldown <= 0) {
                     stalkerCooldown = 3.0;
                     const t = I18N[currentLang];
-                    spawnDiscoveryBurst(player.pos);
-                    showDiscoveryToast(t.toastStalkerTitle, t.toastStalkerSub);
-
-                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
-                    player.vel.set(0, 0, 0);
-                    player.inWater = false;
-                    player.gliding = false;
+                    handlePlayerDeath(t.toastStalkerTitle, t.toastStalkerSub);
                 }
             });
         }
@@ -2359,7 +2574,7 @@
             const fernMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.75, flatShading: true });
             const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9, flatShading: true });
 
-            for (let i = 0; i < 1100; i++) {
+            for (let i = 0; i < 1800; i++) {
                 const rx = (hash2D(i * 3.1, 1.7) - 0.5) * (WORLD_SIZE * 0.82);
                 const rz = (hash2D(2.3, i * 4.7) - 0.5) * (WORLD_SIZE * 0.82);
                 const ry = getTerrainHeight(rx, rz);
@@ -2532,9 +2747,8 @@
 
                 const tree = new THREE.Group();
                 const h = 4.2 + hash2D(i, 31) * 3.8;
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.44, h, 7), barkMat);
+                const trunk = new THREE.Mesh(new THREE.BoxGeometry(0.75, h, 0.75), barkMat);
                 trunk.position.y = h / 2;
-                trunk.rotation.z = (hash2D(i, 33) - 0.5) * 0.14;
                 trunk.castShadow = true;
                 trunk.receiveShadow = true;
                 tree.add(trunk);
@@ -2542,21 +2756,14 @@
                 const crown = new THREE.Group();
                 crown.position.y = h;
                 const mat = leafMats[Math.floor(hash2D(i, 37) * leafMats.length)];
-                const clusterCount = 4 + Math.floor(hash2D(i, 41) * 3);
-                for (let k = 0; k < clusterCount; k++) {
-                    const ca = (k / clusterCount) * Math.PI * 2 + hash2D(i, k);
-                    const cr = 1.6 + hash2D(i + k, 43) * 1.1;
-                    const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(cr, 1), mat);
-                    puff.position.set(
-                        Math.cos(ca) * (0.7 + hash2D(k, i) * 0.9),
-                        (k % 2) * 0.85 + 0.3,
-                        Math.sin(ca) * (0.7 + hash2D(i, k + 5) * 0.9)
-                    );
-                    puff.scale.y = 0.78;
-                    puff.castShadow = true;
-                    puff.receiveShadow = true;
-                    crown.add(puff);
-                }
+                const baseLeaves = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.8, 3.8), mat);
+                baseLeaves.position.y = 0.4;
+                baseLeaves.castShadow = true;
+                baseLeaves.receiveShadow = true;
+                const topLeaves = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.4, 2.4), mat);
+                topLeaves.position.y = 1.8;
+                topLeaves.castShadow = true;
+                crown.add(baseLeaves, topLeaves);
                 tree.add(crown);
                 tree.position.set(tx, ty - 0.15, tz);
                 scene.add(tree);
@@ -3063,10 +3270,16 @@
          */
         function buildWaterfalls() {
             const fallCoords = [
+                { z: -260, side: 1 },
+                { z: -165, side: -1 },
                 { z: -72, side: 1 },
                 { z: -18, side: 1 },
                 { z: 18, side: -1 },
-                { z: 78, side: -1 }
+                { z: 78, side: -1 },
+                { z: WATERFALL_CAVE.z, side: WATERFALL_CAVE.side, hasCave: true },
+                { z: 185, side: 1 },
+                { z: 290, side: -1 },
+                { z: -60, side: 1, riverFn: getThirdRiverX }
             ];
 
             const fallMat = new THREE.MeshStandardMaterial({
@@ -3086,10 +3299,10 @@
             });
 
             fallCoords.forEach((fc, idx) => {
-                const riverX = getRiverCenterX(fc.z);
+                const riverX = (fc.riverFn || getRiverCenterX)(fc.z);
                 const topX = riverX + fc.side * 34;
                 const botX = riverX + fc.side * 9.5;
-                const topY = Math.max(16, getTerrainHeight(topX, fc.z));
+                const topY = fc.hasCave ? 18.0 : Math.max(16, getTerrainHeight(topX, fc.z));
                 const botY = WATER_LEVEL;
 
                 const midX = (topX + botX) * 0.5;
@@ -3119,6 +3332,197 @@
                         phase: idx * 1.4 + m * 0.22
                     });
                 }
+
+                // Special Waterfall with a secret treasure cave behind the falling water
+                if (fc.hasCave) {
+                    const wcGroup = new THREE.Group();
+                    const wcRockMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.92, flatShading: true });
+                    const wcGoldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xca8a04, emissiveIntensity: 0.4, metalness: 0.8, roughness: 0.25, flatShading: true });
+                    const wcWoodMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.85, flatShading: true });
+                    const floorY = WATER_LEVEL + 1.2;
+
+                    // Side rock walls & sealed cliff roof behind the waterfall
+                    for (let wx = riverX + 13; wx <= riverX + 34; wx += 3.5) {
+                        [-4.5, 4.5].forEach(zOff => {
+                            const wall = new THREE.Mesh(new THREE.DodecahedronGeometry(2.4, 0), wcRockMat);
+                            wall.position.set(wx, floorY + 2.2, fc.z + zOff);
+                            wall.scale.set(1.2, 1.8, 1.1);
+                            wcGroup.add(wall);
+                        });
+                        const rimY = Math.max(getTerrainHeight(wx, fc.z - 6.5), getTerrainHeight(wx, fc.z + 6.5), 14.0);
+                        const roof = new THREE.Mesh(new THREE.DodecahedronGeometry(4.2, 1), new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.88, flatShading: true }));
+                        roof.position.set(wx, rimY - 0.1, fc.z);
+                        roof.scale.set(1.3, 0.45, 1.7);
+                        wcGroup.add(roof);
+                    }
+                    // Back rock wall
+                    const backWall = new THREE.Mesh(new THREE.DodecahedronGeometry(4.5, 0), wcRockMat);
+                    backWall.position.set(riverX + 35, floorY + 2.8, fc.z);
+                    backWall.scale.set(1.0, 1.5, 1.8);
+                    wcGroup.add(backWall);
+
+                    // Treasure Chest & Gold inside the Waterfall Cave
+                    const chest = new THREE.Group();
+                    chest.position.set(riverX + 29, floorY + 0.45, fc.z);
+                    chest.rotation.y = -Math.PI / 2;
+                    chest.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 1.0), wcWoodMat));
+                    const trim = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.16, 1.06), wcGoldMat);
+                    trim.position.y = 0.22;
+                    chest.add(trim);
+                    const goldHeap = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.45, 6), wcGoldMat);
+                    goldHeap.position.y = 0.5;
+                    chest.add(goldHeap);
+                    wcGroup.add(chest);
+
+                    const wfLight = new THREE.PointLight(0x38bdf8, 2.2, 18);
+                    wfLight.position.set(riverX + 27, floorY + 2.6, fc.z);
+                    wcGroup.add(wfLight);
+
+                    scene.add(wcGroup);
+                }
+            });
+        }
+
+        /**
+         * Populates the Desert, Snow, and Volcanic biomes with themed props and
+         * builds 3 sealed Treasure Caves across the outer biomes.
+         */
+        function buildExtraBiomesAndCaves() {
+            const cactusMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8, flatShading: true });
+            const sandRockMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9, flatShading: true });
+            const snowMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.7, flatShading: true });
+            const pineMat = new THREE.MeshStandardMaterial({ color: 0x065f46, roughness: 0.85, flatShading: true });
+            const iceMat = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, emissive: 0x0284c7, emissiveIntensity: 0.35, roughness: 0.2, flatShading: true });
+            const volcRockMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.92, flatShading: true });
+            const lavaMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+
+            // 1. Desert Cacti & Sandstone Boulders
+            for (let i = 0; i < 65; i++) {
+                const ang = hash2D(i * 3.7, 1.1) * Math.PI * 2;
+                const r = 18 + Math.sqrt(hash2D(2.9, i * 4.1)) * (BIOMES_EXTRA.desert.radius - 26);
+                const dx = BIOMES_EXTRA.desert.x + Math.cos(ang) * r;
+                const dz = BIOMES_EXTRA.desert.z + Math.sin(ang) * r;
+                const dy = getTerrainHeight(dx, dz);
+                if (dy < WATER_LEVEL + 1.0) continue;
+
+                if (i % 3 !== 0) {
+                    const cactus = new THREE.Group();
+                    const h = 2.4 + hash2D(i, 7) * 1.8;
+                    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.32, h, 6), cactusMat);
+                    stem.position.y = h / 2;
+                    stem.castShadow = true;
+                    cactus.add(stem);
+                    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, h * 0.45, 6), cactusMat);
+                    arm.position.set(0.45, h * 0.62, 0);
+                    arm.rotation.z = -0.6;
+                    cactus.add(arm);
+                    cactus.position.set(dx, dy - 0.1, dz);
+                    scene.add(cactus);
+                } else {
+                    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4 + hash2D(i, 5), 0), sandRockMat);
+                    rock.scale.set(1.4, 0.75, 1.2);
+                    rock.position.set(dx, dy + 0.4, dz);
+                    rock.castShadow = true;
+                    scene.add(rock);
+                }
+            }
+
+            // 2. Snow Pines & Ice Crystals
+            for (let i = 0; i < 70; i++) {
+                const ang = hash2D(i * 4.9, 2.3) * Math.PI * 2;
+                const r = 18 + Math.sqrt(hash2D(3.7, i * 5.3)) * (BIOMES_EXTRA.snow.radius - 26);
+                const sx = BIOMES_EXTRA.snow.x + Math.cos(ang) * r;
+                const sz = BIOMES_EXTRA.snow.z + Math.sin(ang) * r;
+                const sy = getTerrainHeight(sx, sz);
+                if (sy < WATER_LEVEL + 1.0) continue;
+
+                if (i % 4 !== 0) {
+                    const pine = new THREE.Group();
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 2.2, 6), sandRockMat);
+                    trunk.position.y = 1.1;
+                    pine.add(trunk);
+                    const cone1 = new THREE.Mesh(new THREE.ConeGeometry(1.9, 3.2, 7), pineMat);
+                    cone1.position.y = 3.2;
+                    const snowCap = new THREE.Mesh(new THREE.ConeGeometry(1.4, 2.0, 7), snowMat);
+                    snowCap.position.y = 4.6;
+                    pine.add(cone1, snowCap);
+                    pine.position.set(sx, sy - 0.1, sz);
+                    scene.add(pine);
+                } else {
+                    const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.1 + hash2D(i, 9), 0), iceMat);
+                    crystal.scale.set(0.75, 2.1, 0.75);
+                    crystal.position.set(sx, sy + 1.2, sz);
+                    scene.add(crystal);
+                }
+            }
+
+            // 3. Volcanic Obsidian Spires & Lava Pools
+            for (let i = 0; i < 60; i++) {
+                const ang = hash2D(i * 6.1, 4.7) * Math.PI * 2;
+                const r = 18 + Math.sqrt(hash2D(5.1, i * 3.9)) * (BIOMES_EXTRA.volcanic.radius - 26);
+                const vx = BIOMES_EXTRA.volcanic.x + Math.cos(ang) * r;
+                const vz = BIOMES_EXTRA.volcanic.z + Math.sin(ang) * r;
+                const vy = getTerrainHeight(vx, vz);
+                if (vy < WATER_LEVEL + 1.0) continue;
+
+                if (i % 4 === 0) {
+                    const lava = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.5, 0.18, 10), lavaMat);
+                    lava.position.set(vx, vy + 0.08, vz);
+                    scene.add(lava);
+                } else {
+                    const spire = new THREE.Mesh(new THREE.ConeGeometry(1.1, 4.2 + hash2D(i, 3) * 3.0, 5), volcRockMat);
+                    spire.position.set(vx, vy + 1.6, vz);
+                    spire.castShadow = true;
+                    scene.add(spire);
+                }
+            }
+
+            // 4. Three Sealed Biome Treasure Caves
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xca8a04, emissiveIntensity: 0.4, metalness: 0.8, roughness: 0.25, flatShading: true });
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.85, flatShading: true });
+            const caveRockMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.92, flatShading: true });
+
+            EXTRA_TREASURE_CAVES.forEach(ec => {
+                const floorY = getTerrainHeight(ec.x, ec.z);
+                const surfaceY = Math.max(
+                    getTerrainHeight(ec.x - 10, ec.z),
+                    getTerrainHeight(ec.x + 10, ec.z),
+                    getTerrainHeight(ec.x, ec.z - 10)
+                );
+                const g = new THREE.Group();
+                g.position.set(ec.x, 0, ec.z);
+
+                for (let w = 0; w < 9; w++) {
+                    const ang = Math.PI * 0.2 + (w / 8) * Math.PI * 1.6;
+                    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5, 0), caveRockMat);
+                    rock.position.set(Math.sin(ang) * 5.8, floorY + 2.4, Math.cos(ang) * 5.8);
+                    rock.scale.set(1.2, 1.7, 1.2);
+                    g.add(rock);
+                }
+
+                // Surface cap hiding the cave from above
+                const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(9.6, 1), caveRockMat);
+                cap.position.set(0, surfaceY - 0.3, 0);
+                cap.scale.set(1.15, 0.38, 1.15);
+                g.add(cap);
+
+                // Treasure Chest & Gold Coins inside
+                const chest = new THREE.Group();
+                chest.position.set(0, floorY + 0.45, -1.5);
+                chest.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 1.0), woodMat));
+                const trim = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.16, 1.06), goldMat);
+                trim.position.y = 0.22;
+                chest.add(trim);
+                const gold = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.45, 6), goldMat);
+                gold.position.y = 0.5;
+                chest.add(gold);
+                g.add(chest);
+
+                const light = new THREE.PointLight(ec.color, 2.4, 16);
+                light.position.set(0, floorY + 2.6, -1.0);
+                g.add(light);
+
+                scene.add(g);
             });
         }
 
@@ -3136,12 +3540,11 @@
 
             for (let i = 0; i < 20; i++) {
                 const cloud = new THREE.Group();
-                const puffs = 3 + Math.floor(Math.random() * 3);
-                for (let p = 0; p < puffs; p++) {
-                    const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(5 + Math.random() * 4, 0), cloudMat);
-                    puff.position.set((p - 1.5) * 4.5, Math.random() * 1.8, (Math.random() - 0.5) * 3.5);
-                    puff.scale.set(1.35, 0.62, 1.0);
-                    cloud.add(puff);
+                const blocks = 2 + Math.floor(Math.random() * 3);
+                for (let p = 0; p < blocks; p++) {
+                    const block = new THREE.Mesh(new THREE.BoxGeometry(10 + Math.random() * 6, 2.2, 7 + Math.random() * 4), cloudMat);
+                    block.position.set((p - 1.0) * 6.5, 0, (Math.random() - 0.5) * 4.5);
+                    cloud.add(block);
                 }
                 cloud.position.set(
                     (Math.random() - 0.5) * 350,
@@ -3225,7 +3628,7 @@
             playerGroup.add(torso);
 
             const pack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.68, 0.32), packMat);
-            pack.position.set(0, 1.38, 0.34);
+            pack.position.set(0, 1.38, -0.34);
             pack.castShadow = true;
             playerGroup.add(pack);
 
@@ -3312,11 +3715,14 @@
          * Updates the player's emerald balance in the HUD and Shop modal.
          */
         function addEmeralds(amount) {
-            emeralds += amount;
+            if (gameMode !== 'creative') {
+                emeralds += amount;
+            }
+            const displayVal = gameMode === 'creative' ? '∞' : emeralds;
             const hudEl = document.getElementById('emerald-count');
             const shopEl = document.getElementById('shop-emerald-count');
-            if (hudEl) hudEl.textContent = emeralds;
-            if (shopEl) shopEl.textContent = emeralds;
+            if (hudEl) hudEl.textContent = displayVal;
+            if (shopEl) shopEl.textContent = displayVal;
             if (!document.getElementById('shop-modal').classList.contains('hidden')) {
                 renderShop();
             }
@@ -3327,9 +3733,10 @@
          */
         function renderShop() {
             const t = I18N[currentLang];
+            const isCreative = (gameMode === 'creative');
             document.getElementById('shop-title').textContent = t.shopTitle;
             document.getElementById('shop-balance-label').textContent = t.shopBalanceLabel;
-            document.getElementById('shop-emerald-count').textContent = emeralds;
+            document.getElementById('shop-emerald-count').textContent = isCreative ? '∞' : emeralds;
             const container = document.getElementById('shop-items');
             container.innerHTML = '';
 
@@ -3337,7 +3744,7 @@
                 const lvl = upgrades[cfg.id];
                 const maxed = lvl >= cfg.max;
                 const cost = maxed ? 0 : cfg.costs[lvl];
-                const canBuy = !maxed && emeralds >= cost;
+                const canBuy = !maxed && (isCreative || emeralds >= cost);
                 const info = t.shopUpgrades[cfg.id];
 
                 const row = document.createElement('div');
@@ -3356,7 +3763,7 @@
                 `;
                 if (canBuy) {
                     row.querySelector('button').addEventListener('click', () => {
-                        emeralds -= cost;
+                        if (!isCreative) emeralds -= cost;
                         upgrades[cfg.id]++;
                         addEmeralds(0);
                         playDiscoveryChime();
@@ -3369,7 +3776,7 @@
             // Expensive Combat Weapons Section
             WEAPON_CONFIG.forEach(wCfg => {
                 const owned = ownedWeapons[wCfg.id];
-                const canBuy = !owned && emeralds >= wCfg.cost;
+                const canBuy = !owned && (isCreative || emeralds >= wCfg.cost);
                 const info = t.shopWeapons[wCfg.id];
 
                 const row = document.createElement('div');
@@ -3388,7 +3795,7 @@
                 `;
                 if (canBuy) {
                     row.querySelector('button').addEventListener('click', () => {
-                        emeralds -= wCfg.cost;
+                        if (!isCreative) emeralds -= wCfg.cost;
                         ownedWeapons[wCfg.id] = true;
                         activeWeapon = wCfg.id;
                         if (playerBoneMesh) playerBoneMesh.visible = true;
@@ -3413,7 +3820,7 @@
             // Building Parts Section
             BUILDING_CONFIG.forEach(bCfg => {
                 const count = buildingInventory[bCfg.id];
-                const canBuy = emeralds >= bCfg.cost;
+                const canBuy = isCreative || emeralds >= bCfg.cost;
                 const info = t.shopBuildings[bCfg.id];
 
                 const row = document.createElement('div');
@@ -3432,7 +3839,7 @@
                 `;
                 if (canBuy) {
                     row.querySelector('button').addEventListener('click', () => {
-                        emeralds -= bCfg.cost;
+                        if (!isCreative) emeralds -= bCfg.cost;
                         buildingInventory[bCfg.id] += bCfg.amount;
                         if (!selectedBuildType) selectBuildType(bCfg.id);
                         else updateBuildHotbar();
@@ -3922,6 +4329,7 @@
         }
 
         function updatePlayer(dt) {
+            if (isGameOver) return;
             // Directional input relative to camera yaw
             let moveForward = 0;
             let moveRight = 0;
@@ -4026,16 +4434,10 @@
                 player.gliding = false;
                 fallStartY = null;
 
-                // Fatal fall if landing hard from > 14 units high (gliding or deep water saves you)
-                if (fallDist > 14.0 && supportY >= WATER_LEVEL - 0.3) {
-                    inOtherDimension = false;
+                // Fatal fall if landing hard from > 14 units high (gliding, deep water, or Creative mode saves you)
+                if (gameMode !== 'creative' && fallDist > 14.0 && supportY >= WATER_LEVEL - 0.3) {
                     const t = I18N[currentLang];
-                    spawnDiscoveryBurst(player.pos);
-                    showDiscoveryToast(t.toastFallTitle, t.toastFallSub);
-                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
-                    player.vel.set(0, 0, 0);
-                    player.inWater = false;
-                    player.gliding = false;
+                    handlePlayerDeath(t.toastFallTitle, t.toastFallSub);
                 }
             } else {
                 player.onGround = false;
@@ -4045,17 +4447,15 @@
                     fallStartY = fallStartY === null ? player.pos.y : Math.max(fallStartY, player.pos.y);
                 }
 
-                // Falling into the void off the Crystal Dimension Island is also fatal
+                // Falling into the void off the Crystal Dimension Island
                 if (inOtherDimension && player.pos.y < DIM_POS.y - 35.0) {
-                    inOtherDimension = false;
-                    fallStartY = null;
-                    const t = I18N[currentLang];
-                    spawnDiscoveryBurst(player.pos);
-                    showDiscoveryToast(t.toastFallTitle, t.toastFallSub);
-                    player.pos.set(HOUSE_SPAWN.x, getTerrainHeight(HOUSE_SPAWN.x, HOUSE_SPAWN.z) + 1.0, HOUSE_SPAWN.z);
-                    player.vel.set(0, 0, 0);
-                    player.inWater = false;
-                    player.gliding = false;
+                    if (gameMode === 'creative') {
+                        player.pos.set(DIM_POS.x, DIM_POS.y + 1.0, DIM_POS.z + 10.0);
+                        player.vel.set(0, 0, 0);
+                    } else {
+                        const t = I18N[currentLang];
+                        handlePlayerDeath(t.toastFallTitle, t.toastFallSub);
+                    }
                 }
             }
 
@@ -4351,46 +4751,51 @@
 
         // Main Animation Loop
         /**
-         * Renders the real-time top-right 2D minimap centered on the player,
-         * showing the river, Laubwald, village, house, camp, relics, and enemies.
+         * Renders a 2D radar/overview map onto the given canvas centered at (centerX, centerZ).
          */
-        function updateMinimap() {
-            const canvas = document.getElementById('minimap-canvas');
+        function drawRadarMap(canvas, centerX, centerZ, viewRange) {
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const size = canvas.width;
             const half = size / 2;
-            const viewRange = 360; // World units visible from center to edge
             const scale = half / viewRange;
 
             const toMap = (wx, wz) => ({
-                x: half + (wx - player.pos.x) * scale,
-                y: half + (wz - player.pos.z) * scale
+                x: half + (wx - centerX) * scale,
+                y: half + (wz - centerZ) * scale
             });
 
             // Background terrain tone
             ctx.fillStyle = '#064e3b';
             ctx.fillRect(0, 0, size, size);
 
-            // Laubwald (Deciduous Forest)
-            const fPos = toMap(FOREST_POS.x, FOREST_POS.z);
-            ctx.fillStyle = 'rgba(101, 163, 13, 0.55)';
-            ctx.beginPath();
-            ctx.arc(fPos.x, fPos.y, FOREST_POS.radius * scale, 0, Math.PI * 2);
-            ctx.fill();
+            // Laubwald & Extra Biomes
+            const drawBiomeCircle = (bx, bz, br, fill) => {
+                const bp = toMap(bx, bz);
+                ctx.fillStyle = fill;
+                ctx.beginPath();
+                ctx.arc(bp.x, bp.y, br * scale, 0, Math.PI * 2);
+                ctx.fill();
+            };
+            drawBiomeCircle(FOREST_POS.x, FOREST_POS.z, FOREST_POS.radius, 'rgba(101, 163, 13, 0.55)');
+            drawBiomeCircle(BIOMES_EXTRA.desert.x, BIOMES_EXTRA.desert.z, BIOMES_EXTRA.desert.radius, 'rgba(234, 179, 8, 0.45)');
+            drawBiomeCircle(BIOMES_EXTRA.snow.x, BIOMES_EXTRA.snow.z, BIOMES_EXTRA.snow.radius, 'rgba(224, 242, 254, 0.55)');
+            drawBiomeCircle(BIOMES_EXTRA.volcanic.x, BIOMES_EXTRA.volcanic.z, BIOMES_EXTRA.volcanic.radius, 'rgba(249, 115, 22, 0.35)');
 
-            // Winding River
+            // Winding Rivers (Main, Second Eastern, and Third Western River)
             ctx.strokeStyle = '#06b6d4';
-            ctx.lineWidth = Math.max(4, 22 * scale);
+            ctx.lineWidth = Math.max(3, 22 * scale);
             ctx.lineCap = 'round';
-            ctx.beginPath();
-            for (let zOff = -viewRange - 20; zOff <= viewRange + 20; zOff += 18) {
-                const wz = player.pos.z + zOff;
-                const pt = toMap(getRiverCenterX(wz), wz);
-                if (zOff === -viewRange - 20) ctx.moveTo(pt.x, pt.y);
-                else ctx.lineTo(pt.x, pt.y);
-            }
-            ctx.stroke();
+            [getRiverCenterX, getSecondRiverX, getThirdRiverX].forEach(riverFn => {
+                ctx.beginPath();
+                for (let zOff = -viewRange - 20; zOff <= viewRange + 20; zOff += 18) {
+                    const wz = centerZ + zOff;
+                    const pt = toMap(riverFn(wz), wz);
+                    if (zOff === -viewRange - 20) ctx.moveTo(pt.x, pt.y);
+                    else ctx.lineTo(pt.x, pt.y);
+                }
+                ctx.stroke();
+            });
 
             // Landmarks: Base Camp, Sanctuary House, Human Civilization
             const drawLandmark = (wx, wz, color, r = 4.5) => {
@@ -4442,9 +4847,10 @@
                 ctx.fillRect(p.x - 2.5, p.y - 2.5, 5, 5);
             });
 
-            // Player Arrow in Center
+            // Player Arrow at Player's Map Position
+            const playerPt = toMap(player.pos.x, player.pos.z);
             ctx.save();
-            ctx.translate(half, half);
+            ctx.translate(playerPt.x, playerPt.y);
             ctx.rotate(-camState.yaw);
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
@@ -4455,6 +4861,28 @@
             ctx.closePath();
             ctx.fill();
             ctx.restore();
+        }
+
+        function updateMinimap() {
+            drawRadarMap(document.getElementById('minimap-canvas'), player.pos.x, player.pos.z, 360);
+            const bigModal = document.getElementById('bigmap-modal');
+            if (bigModal && !bigModal.classList.contains('hidden')) {
+                drawRadarMap(document.getElementById('bigmap-canvas'), 0, 0, 1050);
+            }
+        }
+
+        function toggleBigMap(forceOpen) {
+            const modal = document.getElementById('bigmap-modal');
+            const isOpen = !modal.classList.contains('hidden');
+            const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+            if (shouldOpen) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                drawRadarMap(document.getElementById('bigmap-canvas'), 0, 0, 1050);
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         }
 
         function animate() {
@@ -4512,6 +4940,29 @@
                 });
             }
 
+            // Check Waterfall Secret Cave discovery
+            const wfCaveX = getRiverCenterX(WATERFALL_CAVE.z) + 27;
+            if (!waterfallCaveFound && Math.hypot(player.pos.x - wfCaveX, player.pos.z - WATERFALL_CAVE.z) < 6.0) {
+                waterfallCaveFound = true;
+                addEmeralds(15);
+                const t = I18N[currentLang];
+                spawnDiscoveryBurst(player.pos);
+                playDiscoveryChime();
+                showDiscoveryToast(t.toastWaterfallCaveTitle, t.toastWaterfallCaveSub);
+            }
+
+            // Check 3 Biome Treasure Caves discovery
+            EXTRA_TREASURE_CAVES.forEach(ec => {
+                if (!extraCavesFound[ec.id] && Math.hypot(player.pos.x - ec.x, player.pos.z - ec.z) < 6.0) {
+                    extraCavesFound[ec.id] = true;
+                    addEmeralds(15);
+                    const t = I18N[currentLang];
+                    spawnDiscoveryBurst(player.pos);
+                    playDiscoveryChime();
+                    showDiscoveryToast(t.toastExtraCaveTitle, t.toastExtraCaveSub);
+                }
+            });
+
             updateMinimap();
             updateCamera();
             updateEnvironmentAndRelics(elapsed, dt);
@@ -4538,6 +4989,7 @@
                 }
                 if (e.code === 'KeyR' && selectedBuildType) buildRotation += Math.PI / 4;
                 if (e.code === 'KeyE' && selectedBuildType) placeBuildingPart();
+                if (e.code === 'KeyM') toggleBigMap();
                 if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
                     e.preventDefault();
                 }
@@ -4665,6 +5117,12 @@
             });
             document.getElementById('build-btn-place').addEventListener('click', () => placeBuildingPart());
 
+            document.getElementById('minimap-box').addEventListener('click', () => toggleBigMap(true));
+            document.getElementById('btn-close-bigmap').addEventListener('click', () => toggleBigMap(false));
+            document.getElementById('bigmap-modal').addEventListener('click', e => {
+                if (e.target.id === 'bigmap-modal') toggleBigMap(false);
+            });
+
             document.getElementById('btn-shop').addEventListener('click', () => {
                 toggleShop();
             });
@@ -4672,12 +5130,17 @@
                 toggleShop(false);
             });
 
+            document.getElementById('btn-hardcore').addEventListener('click', toggleHardcoreMode);
+            document.getElementById('btn-modal-hardcore').addEventListener('click', toggleHardcoreMode);
+            document.getElementById('btn-hardcore-restart').addEventListener('click', () => location.reload());
+
             document.getElementById('btn-help').addEventListener('click', () => {
                 const modal = document.getElementById('guide-modal');
                 modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
             });
 
             document.getElementById('btn-start-game').addEventListener('click', () => {
+                lockHardcoreMode();
                 const modal = document.getElementById('guide-modal');
                 modal.classList.add('opacity-0', 'pointer-events-none');
                 setTimeout(() => modal.classList.add('hidden'), 300);
