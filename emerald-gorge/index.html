@@ -1043,6 +1043,28 @@
          * Computes exact terrain elevation at (x, z), including the surface plateau
          * for the Sanctuary House and the carved underground caves & secret passages.
          */
+        function createMinecraftBlockTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 16;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            for (let y = 0; y < 16; y++) {
+                for (let x = 0; x < 16; x++) {
+                    const isBorder = (x === 0 || y === 0 || x === 15 || y === 15);
+                    const n = hash2D(x * 3.7, y * 5.3);
+                    const shade = isBorder ? 210 : (225 + Math.floor(n * 30));
+                    ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            return tex;
+        }
+
         function getTerrainHeight(x, z) {
             let finalHeight = getRawTerrainHeight(x, z);
 
@@ -1314,35 +1336,25 @@
                 const dVolc = Math.hypot(x - BIOMES_EXTRA.volcanic.x, z - BIOMES_EXTRA.volcanic.z);
 
                 if (y < WATER_LEVEL - 0.7) {
-                    // Turquoise riverbed with warm pebbles
                     c.setRGB(0.18 + noiseTint, 0.52 + noiseTint, 0.46);
                 } else if (dDesert < BIOMES_EXTRA.desert.radius) {
-                    // Golden Desert Dunes
                     c.setRGB(0.85 + noiseTint, 0.70 + noiseTint, 0.34);
                 } else if (dSnow < BIOMES_EXTRA.snow.radius) {
-                    // Frosty Snow & Alpine Glacier
                     c.setRGB(0.86 + noiseTint * 0.5, 0.93 + noiseTint * 0.4, 0.98);
                 } else if (dVolc < BIOMES_EXTRA.volcanic.radius) {
-                    // Volcanic Obsidian & Ash Badlands
                     c.setRGB(0.22 + noiseTint, 0.18 + noiseTint, 0.24);
                 } else if (y < WATER_LEVEL + 1.2) {
-                    // Golden tropical sandbar & river pebbles
                     c.setRGB(0.80 + noiseTint, 0.74 + noiseTint, 0.52);
                 } else if (slope > 0.92) {
-                    // Steep gorge cliff walls: layered mossy basalt & emerald lichen
                     const mossBlend = mossPatch > 0.55 ? 0.14 : 0.0;
                     c.setRGB(0.21 + noiseTint, 0.33 + noiseTint + mossBlend, 0.27);
                 } else if (y < 13) {
-                    // Sunlit lush rainforest valley floor & lower gorge
                     c.setRGB(0.10 + noiseTint, 0.56 + noiseTint + mossPatch * 0.06, 0.22);
                 } else if (y < 30) {
-                    // Deep emerald jungle highlands
                     c.setRGB(0.07 + noiseTint, 0.45 + noiseTint, 0.20);
                 } else if (y < 44) {
-                    // Sunlit tropical mountain ridges
                     c.setRGB(0.17 + noiseTint, 0.51 + noiseTint, 0.25);
                 } else {
-                    // Misty volcanic / highland peaks with mossy stone
                     c.setRGB(0.30 + noiseTint, 0.44 + noiseTint, 0.36);
                 }
 
